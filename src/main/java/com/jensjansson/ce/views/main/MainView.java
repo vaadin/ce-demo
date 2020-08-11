@@ -2,8 +2,10 @@ package com.jensjansson.ce.views.main;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.dependency.CssImport;
@@ -20,10 +22,10 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.PWA;
+import com.vaadin.flow.spring.annotation.UIScope;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
 
-import com.jensjansson.ce.views.main.MainView;
 import com.jensjansson.ce.views.yourprofile.YourProfileView;
 import com.jensjansson.ce.views.persons.PersonsView;
 
@@ -34,10 +36,16 @@ import com.jensjansson.ce.views.persons.PersonsView;
 @PWA(name = "CE Demo", shortName = "CE Demo")
 @Theme(value = Lumo.class, variant = Lumo.LIGHT)
 @CssImport("styles/views/main/main-view.css")
+@org.springframework.stereotype.Component
+@UIScope
 public class MainView extends AppLayout {
 
     private final Tabs menu;
     private H1 viewTitle;
+    private Image avatar;
+
+    private String userName = "Anonymous User";
+    private String userAvatar = "images/avatars/" + ThreadLocalRandom.current().nextInt(1, 8 + 1) + ".png";
 
     public MainView() {
         setPrimarySection(Section.DRAWER);
@@ -56,8 +64,9 @@ public class MainView extends AppLayout {
         layout.add(new DrawerToggle());
         viewTitle = new H1();
         layout.add(viewTitle);
-        layout.add(new Image("https://randomuser.me/api/portraits/women/8.jpg",
-                "Avatar"));
+        avatar = new Image(userAvatar, "Avatar");
+        avatar.setTitle(userName);
+        layout.add(avatar);
         return layout;
     }
 
@@ -126,5 +135,23 @@ public class MainView extends AppLayout {
 
     private String getCurrentPageTitle() {
         return getContent().getClass().getAnnotation(PageTitle.class).value();
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+        avatar.setTitle(userName);
+    }
+
+    public String getUserAvatar() {
+        return userAvatar;
+    }
+
+    public void setUserAvatar(String avatar) {
+        this.userAvatar = avatar;
+        this.avatar.setSrc(avatar);
     }
 }
