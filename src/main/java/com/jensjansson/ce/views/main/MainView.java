@@ -5,9 +5,9 @@ import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.html.Image;
@@ -42,7 +42,7 @@ public class MainView extends AppLayout {
 
     private final Tabs menu;
     private H1 viewTitle;
-    private Image avatar;
+    private Avatar avatar;
 
     private String userName = "Anonymous User";
     private String userAvatar = "images/avatars/" + ThreadLocalRandom.current().nextInt(1, 8 + 1) + ".png";
@@ -64,8 +64,7 @@ public class MainView extends AppLayout {
         layout.add(new DrawerToggle());
         viewTitle = new H1();
         layout.add(viewTitle);
-        avatar = new Image(userAvatar, "Avatar");
-        avatar.setTitle(userName);
+        avatar = new Avatar(userName, userAvatar);
         layout.add(avatar);
         return layout;
     }
@@ -143,7 +142,7 @@ public class MainView extends AppLayout {
 
     public void setUserName(String userName) {
         this.userName = userName;
-        avatar.setTitle(userName);
+        avatar.setName(userName);
     }
 
     public String getUserAvatar() {
@@ -152,6 +151,6 @@ public class MainView extends AppLayout {
 
     public void setUserAvatar(String avatar) {
         this.userAvatar = avatar;
-        this.avatar.setSrc(avatar);
+        this.avatar.setImage(avatar);
     }
 }

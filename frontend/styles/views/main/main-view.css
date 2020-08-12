@@ -1,12 +1,9 @@
 #header {
     height: var(--lumo-size-xl);
 }
-#header img {
-    border-radius: 50%;
-    height: var(--lumo-size-s);
+#header vaadin-avatar {
     margin-left: auto;
     margin-right: var(--lumo-space-m);
-    overflow: hidden;
 }
 #header h1 {
     font-size: var(--lumo-font-size-l);
