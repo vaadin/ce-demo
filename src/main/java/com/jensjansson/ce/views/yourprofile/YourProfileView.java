@@ -32,7 +32,7 @@ public class YourProfileView extends FlexLayout implements BeforeEnterObserver {
         setJustifyContentMode(JustifyContentMode.CENTER);
 
         name = new TextField("Your name", e -> {
-            if(e.isFromClient()) {
+            if (e.isFromClient()) {
                 mainView.setUserName(e.getValue());
             }
         });

@@ -15,6 +15,7 @@ import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.tabs.TabsVariant;
@@ -38,6 +39,7 @@ import com.jensjansson.ce.views.persons.PersonsView;
 @CssImport("styles/views/main/main-view.css")
 @org.springframework.stereotype.Component
 @UIScope
+@Push
 public class MainView extends AppLayout {
 
     private final Tabs menu;

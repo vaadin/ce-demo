@@ -28,7 +28,11 @@ public String getEmail() {
 public void setEmail(String email) {
   this.email = email;
 }
-
-
-
+private String happiness;
+public String getHappiness() {
+  return happiness;
+}
+public void setHappiness(String happiness) {
+  this.happiness = happiness;
+}
 }
