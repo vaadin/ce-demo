@@ -1,5 +1,6 @@
 package com.jensjansson.ce.views.persons;
 
+import com.jensjansson.ce.bot.BotRunner;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
@@ -27,12 +28,17 @@ import com.jensjansson.ce.views.main.MainView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.vaadin.artur.helpers.CrudServiceDataProvider;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 @Route(value = "persons", layout = MainView.class)
 @PageTitle("Persons")
 @CssImport("styles/views/persons/persons-view.css")
 public class PersonsView extends Div {
+
+    public static final List<String> HAPPINESS_VALUES = Arrays.asList(
+            "Raptorous", "Ecstatic", "Joyful", "Indifferent", "Dreadful");
 
     private Grid<Person> grid;
 
@@ -121,7 +127,7 @@ public class PersonsView extends Div {
         editorDiv.add(avatarGroup);
         editorLayoutDiv.add(editorDiv);
 
-        happiness.setItems("Raptorous", "Ecstatic", "Joyful", "Indifferent", "Dreadful");
+        happiness.setItems(HAPPINESS_VALUES);
         happiness.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
         happiness.setValue("Raptorous");
         add(happiness);
@@ -173,5 +179,7 @@ public class PersonsView extends Div {
         avatarGroup.setTopic(topicId);
         // The password field isn't bound through the binder, so handle that
         password.setValue("");
+
+        BotRunner.onUserJoined(topicId);
     }
 }
