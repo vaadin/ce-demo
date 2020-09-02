@@ -4,6 +4,8 @@ import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.CollaborationBinder;
+import com.vaadin.collaborationengine.CollaborationEngine;
+import com.vaadin.collaborationengine.CollaborationMap;
 import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.button.Button;
@@ -48,6 +50,8 @@ public class PersonsView extends Div {
     private CollaborationAvatarGroup avatarGroup;
     private CollaborationBinder<Person> binder;
     private Person person;
+
+    private CollaborationMap refreshGridMap;
 
     public PersonsView(@Autowired PersonService personService, MainView mainView) {
         setId("persons-view");
@@ -96,6 +100,9 @@ public class PersonsView extends Div {
                 personService.update(person);
                 grid.select(null);
                 grid.getDataProvider().refreshAll();
+                if (refreshGridMap != null) {
+                    refreshGridMap.put("refreshGrid", Math.random());
+                }
                 Notification.show("Person details stored.");
             } catch (ValidationException validationException) {
                 validationException.printStackTrace();
@@ -110,6 +117,12 @@ public class PersonsView extends Div {
         createEditorLayout(splitLayout);
 
         add(splitLayout);
+
+        CollaborationEngine.getInstance().openTopicConnection(this, "refreshGrid", topicConnection -> {
+            refreshGridMap = topicConnection.getNamedMap("refreshGrid");
+            refreshGridMap.subscribe(e -> grid.getDataProvider().refreshAll());
+            return () -> refreshGridMap = null;
+        });
     }
 
     private void createEditorLayout(SplitLayout splitLayout) {
