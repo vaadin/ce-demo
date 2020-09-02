@@ -180,6 +180,8 @@ public class PersonsView extends Div {
         // The password field isn't bound through the binder, so handle that
         password.setValue("");
 
-        BotRunner.onUserJoined(topicId);
+        if (topicId != null) {
+            BotRunner.onUserJoined(topicId);
+        }
     }
 }
