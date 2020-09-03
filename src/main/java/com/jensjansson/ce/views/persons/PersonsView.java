@@ -101,7 +101,7 @@ public class PersonsView extends Div {
                 grid.select(null);
                 grid.getDataProvider().refreshAll();
                 if (refreshGridMap != null) {
-                    refreshGridMap.put("refreshGrid", Math.random());
+                    refreshGridMap.put("refreshGrid", UUID.randomUUID().toString());
                 }
                 Notification.show("Person details stored.");
             } catch (ValidationException validationException) {
