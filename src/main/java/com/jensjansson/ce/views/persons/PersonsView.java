@@ -44,6 +44,8 @@ public class PersonsView extends Div {
 
     private Grid<Person> grid;
 
+    private Div editorLayoutDiv;
+
     private TextField firstName = new TextField();
     private TextField lastName = new TextField();
     private RadioButtonGroup<String> happiness = new RadioButtonGroup<>();
@@ -129,10 +131,12 @@ public class PersonsView extends Div {
             refreshGridMap.subscribe(e -> grid.getDataProvider().refreshAll());
             return () -> refreshGridMap = null;
         });
+
+        updateEditorLayoutVisibility();
     }
 
     private void createEditorLayout(SplitLayout splitLayout) {
-        Div editorLayoutDiv = new Div();
+        editorLayoutDiv = new Div();
         editorLayoutDiv.setId("editor-layout");
 
         Div editorDiv = new Div();
@@ -196,5 +200,10 @@ public class PersonsView extends Div {
         if (topicId != null) {
             BotRunner.onUserJoined(topicId);
         }
+        updateEditorLayoutVisibility();
+    }
+
+    private void updateEditorLayoutVisibility() {
+        editorLayoutDiv.setVisible(person != null);
     }
 }
