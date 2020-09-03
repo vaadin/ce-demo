@@ -1,5 +1,7 @@
 package com.jensjansson.ce.data.generator;
 
+import java.util.List;
+
 import com.vaadin.flow.spring.annotation.SpringComponent;
 
 import com.jensjansson.ce.data.service.PersonRepository;
@@ -29,16 +31,20 @@ public class DataGenerator {
             logger.info("Generating demo data");
 
             logger.info("... generating 100 Person entities...");
-            ExampleDataGenerator<Person> personRepositoryGenerator = new ExampleDataGenerator<>(Person.class, seed);
-            personRepositoryGenerator.setData(Person::setFirstName, DataType.FIRST_NAME);
-            personRepositoryGenerator.setData(Person::setLastName, DataType.LAST_NAME);
-            personRepositoryGenerator.setData(Person::setEmail, DataType.EMAIL);
-            personRepository.saveAll(personRepositoryGenerator.create(100));
+            personRepository.saveAll(generateData(100, seed));
 
 
 
             logger.info("Generated demo data");
         };
+    }
+
+    public static List<Person> generateData(int count, long seed) {
+        ExampleDataGenerator<Person> personRepositoryGenerator = new ExampleDataGenerator<>(Person.class, seed);
+        personRepositoryGenerator.setData(Person::setFirstName, DataType.FIRST_NAME);
+        personRepositoryGenerator.setData(Person::setLastName, DataType.LAST_NAME);
+        personRepositoryGenerator.setData(Person::setEmail, DataType.EMAIL);
+        return personRepositoryGenerator.create(count);
     }
 
 }
