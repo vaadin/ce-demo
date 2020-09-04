@@ -43,7 +43,7 @@ public class BotRunner implements Runnable {
 
     private TopicConnection topic;
     private UserInfo user;
-    private boolean shouldStop;
+    private volatile boolean shouldStop;
 
     public BotRunner(TopicConnection topic) {
         this.topic = topic;
