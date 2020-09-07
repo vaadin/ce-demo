@@ -106,7 +106,6 @@ public class PersonsView extends Div {
                     person.setId(this.person.getId());
                 }
                 personService.update(person);
-                grid.select(null);
                 grid.getDataProvider().refreshAll();
                 if (refreshGridMap != null) {
                     refreshGridMap.put("refreshGrid", UUID.randomUUID().toString());
