@@ -1,5 +1,10 @@
 package com.jensjansson.ce.views.yourprofile;
 
+import com.vaadin.flow.component.Html;
+import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.html.*;
@@ -8,7 +13,10 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
+
+import com.jensjansson.ce.views.about.AboutView;
 import com.jensjansson.ce.views.main.MainView;
+import com.jensjansson.ce.views.persons.PersonsView;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,6 +39,18 @@ public class YourProfileView extends FlexLayout implements BeforeEnterObserver {
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
 
+        Html leadInText = new Html("<div>" +
+                  "<h3>Welcome to the Collaboration Engine Demo</h3>" +
+                  "<p>In this app you can edit forms together with other users in real time. " +
+                    "Start by selecting your user name and avatar. These will be displayed to other collaborating users when working on the same form together." +
+                  "</p>" +
+                "</div>");
+
+        Paragraph aboutPageLink = new Paragraph(
+                new Text("Refer to "),
+                new RouterLink("the about page", AboutView.class),
+                new Text(" for more detailed information. You can also access it later from the navigation menu."));
+
         name = new TextField("Your name", e -> {
             if (e.isFromClient()) {
                 mainView.setUserName(e.getValue());
@@ -44,7 +64,10 @@ public class YourProfileView extends FlexLayout implements BeforeEnterObserver {
         Anchor link = new Anchor("https://icon-icons.com/pack/xmas-giveaway-:)/1736", "Icons by Laura Reen");
         link.getStyle().set("color", "gray");
         link.getElement().setAttribute("theme", "font-size-xs");
-        VerticalLayout center = new VerticalLayout(name, avatars, link);
+        Button startButton = new Button("Start editing", e -> UI.getCurrent().navigate(PersonsView.class));
+        startButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+        VerticalLayout center = new VerticalLayout(leadInText, aboutPageLink, name, avatars, link, startButton);
         center.setHorizontalComponentAlignment(Alignment.END, link);
         center.setWidth("100%");
         center.setMaxWidth("400px");
