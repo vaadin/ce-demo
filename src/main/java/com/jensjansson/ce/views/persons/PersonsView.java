@@ -12,6 +12,7 @@ import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -37,6 +38,7 @@ import java.util.UUID;
 @Route(value = "persons", layout = MainView.class)
 @PageTitle("Persons")
 @CssImport("styles/views/persons/persons-view.css")
+@JsModule("script.js")
 public class PersonsView extends Div {
 
     public static final List<String> HAPPINESS_VALUES = Arrays.asList(
@@ -119,6 +121,7 @@ public class PersonsView extends Div {
 
         SplitLayout splitLayout = new SplitLayout();
         splitLayout.setSizeFull();
+        splitLayout.getElement().executeJs("window._setSplitLayout(this)");
 
         createGridLayout(splitLayout);
         createEditorLayout(splitLayout);
