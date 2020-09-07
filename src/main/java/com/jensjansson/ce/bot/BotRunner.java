@@ -35,6 +35,12 @@ public class BotRunner implements Runnable {
                         // Only one bot at a time for each item
                         return null;
                     }
+                    /*
+                     * TODO: Use Timer instead of spawning multiple Threads.
+                     * Having many threads is not efficient, but this is not a
+                     * very serious issue as long as the number of items in the
+                     * grid (and thus bot threads) is limited as currently.
+                     */
                     BotRunner botRunner = new BotRunner(topic);
                     new Thread(botRunner).start();
                     return () -> botRunner.shouldStop = true;
