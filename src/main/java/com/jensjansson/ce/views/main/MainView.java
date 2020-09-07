@@ -27,6 +27,7 @@ import com.vaadin.flow.spring.annotation.UIScope;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
 
+import com.jensjansson.ce.views.about.AboutView;
 import com.jensjansson.ce.views.yourprofile.YourProfileView;
 import com.jensjansson.ce.views.persons.PersonsView;
 
@@ -99,7 +100,8 @@ public class MainView extends AppLayout {
     private Component[] createMenuItems() {
         RouterLink[] links = new RouterLink[] {
             new RouterLink("Your profile", YourProfileView.class),
-            new RouterLink("Persons", PersonsView.class)
+            new RouterLink("Persons", PersonsView.class),
+            new RouterLink("About", AboutView.class)
         };
         return Arrays.stream(links).map(MainView::createTab).toArray(Tab[]::new);
     }
