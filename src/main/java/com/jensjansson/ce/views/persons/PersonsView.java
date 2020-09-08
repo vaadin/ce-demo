@@ -127,7 +127,6 @@ public class PersonsView extends Div {
                     refreshGridMap.put("refreshGrid", UUID.randomUUID().toString());
                 }
                 sendSaveNotification();
-                grid.select(null);
             } catch (ValidationException validationException) {
                 validationException.printStackTrace();
                 Notification.show("An exception happened while trying to store the person details.");
