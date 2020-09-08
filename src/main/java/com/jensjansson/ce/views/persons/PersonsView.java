@@ -1,5 +1,9 @@
 package com.jensjansson.ce.views.persons;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jensjansson.ce.bot.BotRunner;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
@@ -18,6 +22,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
@@ -28,12 +33,15 @@ import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.shared.Registration;
+
 import com.jensjansson.ce.views.main.MainView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.vaadin.artur.helpers.CrudServiceDataProvider;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Route(value = "persons", layout = MainView.class)
@@ -44,6 +52,8 @@ public class PersonsView extends Div {
 
     public static final List<String> HAPPINESS_VALUES = Arrays.asList(
             "Raptorous", "Ecstatic", "Joyful", "Indifferent", "Dreadful");
+
+    private UserInfo localUser;
 
     private Grid<Person> grid;
 
@@ -63,11 +73,13 @@ public class PersonsView extends Div {
     private Person person;
 
     private CollaborationMap refreshGridMap;
+    private CollaborationMap saveMap;
+    private Registration topicConnectionRegistration;
 
     public PersonsView(@Autowired PersonService personService, MainView mainView) {
         setId("persons-view");
         // Configure Grid
-        UserInfo localUser = new UserInfo(UUID.randomUUID().toString());
+        localUser = new UserInfo(UUID.randomUUID().toString());
         localUser.setName(mainView.getUserName());
         localUser.setImage(mainView.getUserAvatar());
 
@@ -114,7 +126,7 @@ public class PersonsView extends Div {
                 if (refreshGridMap != null) {
                     refreshGridMap.put("refreshGrid", UUID.randomUUID().toString());
                 }
-                Notification.show("Person details stored.");
+                sendSaveNotification();
             } catch (ValidationException validationException) {
                 validationException.printStackTrace();
                 Notification.show("An exception happened while trying to store the person details.");
@@ -207,7 +219,63 @@ public class PersonsView extends Div {
         if (topicId != null) {
             BotRunner.onUserJoined(topicId);
         }
+        connectToSaveNotifications(topicId);
         updateEditorLayoutVisibility();
+    }
+
+    private void sendSaveNotification() {
+        if (saveMap != null) {
+            ObjectMapper om = new ObjectMapper();
+            ObjectNode objectNode = om.createObjectNode();
+            objectNode.put("userName", localUser.getName());
+            objectNode.put("userId", localUser.getId());
+            objectNode.put("messageId", UUID.randomUUID().toString());
+            saveMap.put("save", objectNode.toString());
+            // Value needs to be cleared right away, or the notification
+            // will be shown when starting to edit the item, and thus
+            // connecting to the topic.
+            saveMap.put("save", null);
+        } else {
+            showSaveNotification(localUser.getName());
+        }
+    }
+
+    private void connectToSaveNotifications(String topicId) {
+        saveMap = null;
+        if (topicConnectionRegistration != null) {
+            topicConnectionRegistration.remove();
+        }
+        if (topicId != null) {
+            topicConnectionRegistration = CollaborationEngine.getInstance()
+                    .openTopicConnection(this, topicId, topicConnection -> {
+                        saveMap = topicConnection.getNamedMap("save");
+                        saveMap.subscribe(e -> {
+                            if (e.getValue() == null) {
+                                return;
+                            }
+                            ObjectMapper om = new ObjectMapper();
+                            try {
+                                JsonNode jsonNode = om.readTree((String) e.getValue());
+                                String savingUser = jsonNode.get("userName").asText();
+                                String savingUserId = jsonNode.get("userId").asText();
+                                if (Objects.equals(savingUserId, localUser.getId())) {
+                                    savingUser = "you";
+                                }
+                                showSaveNotification(savingUser);
+                            } catch (JsonProcessingException jsonProcessingException) {
+                                jsonProcessingException.printStackTrace();
+                            }
+                        });
+                        return null;
+                    });
+        }
+    }
+
+    private void showSaveNotification(String username) {
+        Notification notification = new Notification("Changes saved by " + username);
+        notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        notification.setDuration(5000);
+        notification.open();
     }
 
     private void updateEditorLayoutVisibility() {
