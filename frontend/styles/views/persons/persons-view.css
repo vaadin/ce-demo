@@ -21,9 +21,16 @@
 }
 
 #editor-layout {
-	width: 400px;
 	display: flex;
 	flex-direction: column;
+}
+
+vaadin-split-layout[orientation~="horizontal"] > #editor-layout {
+	width: 400px;
+}
+
+vaadin-split-layout[orientation~="vertical"] > #editor-layout {
+	height: 60%;
 }
 
 #editor {

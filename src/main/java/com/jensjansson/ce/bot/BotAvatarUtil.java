@@ -59,6 +59,9 @@ class BotAvatarUtil {
             Predicate<UserInfo> filter) {
         CollaborationMap map = getMap(topic);
         List<UserInfo> users = (List<UserInfo>) map.get(MAP_KEY);
+        if (users == null) {
+            return 0;
+        }
         return (int) users.stream().filter(filter).count();
     }
 

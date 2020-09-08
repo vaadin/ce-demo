@@ -4,14 +4,19 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
+import com.jensjansson.ce.views.about.AboutView;
+import com.jensjansson.ce.views.persons.PersonsView;
+import com.jensjansson.ce.views.yourprofile.YourProfileView;
+
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dependency.JsModule;
-import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -26,9 +31,6 @@ import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.spring.annotation.UIScope;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
-
-import com.jensjansson.ce.views.yourprofile.YourProfileView;
-import com.jensjansson.ce.views.persons.PersonsView;
 
 /**
  * The main view is a top-level placeholder for other views.
@@ -67,6 +69,7 @@ public class MainView extends AppLayout {
         viewTitle = new H1();
         layout.add(viewTitle);
         avatar = new Avatar(userName, userAvatar);
+        avatar.getElement().addEventListener("click", e -> UI.getCurrent().navigate(YourProfileView.class));
         layout.add(avatar);
         return layout;
     }
@@ -98,8 +101,8 @@ public class MainView extends AppLayout {
 
     private Component[] createMenuItems() {
         RouterLink[] links = new RouterLink[] {
-            new RouterLink("Your profile", YourProfileView.class),
-            new RouterLink("Persons", PersonsView.class)
+            new RouterLink("Persons", PersonsView.class),
+            new RouterLink("About", AboutView.class)
         };
         return Arrays.stream(links).map(MainView::createTab).toArray(Tab[]::new);
     }

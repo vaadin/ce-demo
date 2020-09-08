@@ -16,6 +16,7 @@ import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -29,6 +30,7 @@ import com.vaadin.flow.component.splitlayout.SplitLayout;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.shared.Registration;
@@ -45,6 +47,7 @@ import java.util.UUID;
 @Route(value = "persons", layout = MainView.class)
 @PageTitle("Persons")
 @CssImport("styles/views/persons/persons-view.css")
+@JsModule("script.js")
 public class PersonsView extends Div {
 
     public static final List<String> HAPPINESS_VALUES = Arrays.asList(
@@ -86,7 +89,8 @@ public class PersonsView extends Div {
 
         grid = new Grid<>(Person.class);
         grid.setColumns("firstName", "lastName", "email");
-        grid.setDataProvider(new CrudServiceDataProvider<Person, Void>(personService));
+        CrudServiceDataProvider<Person, Void> dataProvider = new CrudServiceDataProvider<>(personService);
+        grid.setDataProvider(dataProvider);
 
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
         grid.setHeightFull();
@@ -132,6 +136,7 @@ public class PersonsView extends Div {
 
         SplitLayout splitLayout = new SplitLayout();
         splitLayout.setSizeFull();
+        splitLayout.getElement().executeJs("window._setSplitLayout(this)");
 
         createGridLayout(splitLayout);
         createEditorLayout(splitLayout);
@@ -145,6 +150,9 @@ public class PersonsView extends Div {
         });
 
         updateEditorLayoutVisibility();
+
+        // Select first item by default
+        dataProvider.fetch(new Query<>()).findFirst().ifPresent(grid::select);
     }
 
     private void createEditorLayout(SplitLayout splitLayout) {
