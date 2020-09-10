@@ -65,6 +65,7 @@ public class YourProfileView extends VerticalLayout implements BeforeEnterObserv
         avatars.setLabel("Choose avatar");
         Anchor link = new Anchor("https://icon-icons.com/pack/xmas-giveaway-:)/1736", "Icons by Laura Reen");
         link.getStyle().set("color", "gray");
+        link.getStyle().set("margin-left", "auto");
         link.getElement().setAttribute("theme", "font-size-xs");
         Button startButton = new Button("Start editing", e -> UI.getCurrent().navigate(PersonsView.class));
         startButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
