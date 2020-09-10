@@ -85,7 +85,7 @@ public class PersonsView extends Div {
 
         avatarGroup = new CollaborationAvatarGroup(
                 localUser);
-        avatarGroup.getContent().setMaxItemsVisible(4);
+        avatarGroup.setMaxItemsVisible(4);
 
         grid = new Grid<>(Person.class);
         grid.setColumns("firstName", "lastName", "email");
