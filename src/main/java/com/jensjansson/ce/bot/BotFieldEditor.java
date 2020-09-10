@@ -37,12 +37,22 @@ class BotFieldEditor {
         Object value = fieldToValueProvider.get(propertyName).get();
 
         sleepRandom(1, 3);
-        CollaborationBinderUtil.addEditor(topic, propertyName, user);
 
-        sleepRandom(3, 5);
-        CollaborationBinderUtil.setFieldValue(topic, propertyName, value);
+        if (propertyName.equals("happiness")) {
+            CollaborationBinderUtil.addEditor(topic, propertyName, user,
+                    PersonsView.HAPPINESS_VALUES.indexOf(value));
+            // RadioButtonGroup changes the value immediately when
+            CollaborationBinderUtil.setFieldValue(topic, propertyName, value);
+            sleepRandom(3, 5);
+        } else {
+            CollaborationBinderUtil.addEditor(topic, propertyName, user);
 
-        sleepRandom(0, 2);
+            sleepRandom(3, 5);
+            CollaborationBinderUtil.setFieldValue(topic, propertyName, value);
+
+            sleepRandom(0, 2);
+        }
+
         CollaborationBinderUtil.removeEditor(topic, propertyName, user);
 
     }
