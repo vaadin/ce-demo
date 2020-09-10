@@ -63,6 +63,13 @@ public class BotRunner implements Runnable {
     @Override
     public void run() {
         sleepRandom(1, 3);
+
+        if (getBotCount(topic) > 0) {
+            // Multiple users joined during the sleep period, and another bot
+            // thread added its avatar already.
+            return;
+        }
+
         addAvatar(topic, user);
 
         while (!shouldStop) {
