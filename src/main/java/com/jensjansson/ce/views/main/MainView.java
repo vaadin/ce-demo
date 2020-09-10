@@ -120,7 +120,7 @@ public class MainView extends AppLayout {
     }
 
     private void updateChrome() {
-        getTabWithCurrentRoute().ifPresent(menu::setSelectedTab);
+        menu.setSelectedTab(getTabWithCurrentRoute().orElse(null));
         viewTitle.setText(getCurrentPageTitle());
     }
 
