@@ -8,10 +8,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.html.*;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
-import com.vaadin.flow.component.orderedlayout.FlexLayout.FlexWrap;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -28,7 +25,7 @@ import java.util.List;
 @RouteAlias(value = "", layout = MainView.class)
 @PageTitle("Your profile")
 @CssImport("styles/views/yourprofile/yourprofile-view.css")
-public class YourProfileView extends VerticalLayout implements BeforeEnterObserver {
+public class YourProfileView extends FlexLayout implements BeforeEnterObserver {
 
     MainView mainView;
     TextField name;
@@ -38,8 +35,9 @@ public class YourProfileView extends VerticalLayout implements BeforeEnterObserv
         this.mainView = mainView;
 
         setId("your-profile-view");
-        addClassName("your-profile-view");
         setSizeFull();
+        setAlignItems(Alignment.CENTER);
+        setJustifyContentMode(JustifyContentMode.CENTER);
 
         Html leadInText = new Html("<div>" +
                   "<h3>Welcome to the Collaboration Engine Demo</h3>" +
@@ -70,7 +68,12 @@ public class YourProfileView extends VerticalLayout implements BeforeEnterObserv
         Button startButton = new Button("Start editing", e -> UI.getCurrent().navigate(PersonsView.class));
         startButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        add(leadInText, aboutPageLink, name, avatars, link, startButton);
+        VerticalLayout center = new VerticalLayout(leadInText, aboutPageLink, name, avatars, link, startButton);
+        center.setHorizontalComponentAlignment(Alignment.END, link);
+        center.setWidth("100%");
+        center.setMaxWidth("400px");
+
+        add(center);
     }
 
     @Override
