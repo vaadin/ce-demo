@@ -39,7 +39,7 @@ public class YourProfileView extends VerticalLayout implements BeforeEnterObserv
 
         setId("your-profile-view");
         addClassName("your-profile-view");
-        setSizeFull();
+        setWidthFull();
 
         Html leadInText = new Html("<div>" +
                   "<h3>Welcome to the Collaboration Engine Demo</h3>" +
@@ -69,6 +69,8 @@ public class YourProfileView extends VerticalLayout implements BeforeEnterObserv
         link.getElement().setAttribute("theme", "font-size-xs");
         Button startButton = new Button("Start editing", e -> UI.getCurrent().navigate(PersonsView.class));
         startButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+
+
 
         add(leadInText, aboutPageLink, name, avatars, link, startButton);
     }
