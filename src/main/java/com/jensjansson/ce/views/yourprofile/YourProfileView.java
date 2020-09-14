@@ -8,8 +8,6 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.html.*;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.FlexLayout.FlexWrap;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -70,7 +68,8 @@ public class YourProfileView extends VerticalLayout implements BeforeEnterObserv
         Button startButton = new Button("Start editing", e -> UI.getCurrent().navigate(PersonsView.class));
         startButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-
+        // workaround https://github.com/vaadin/vaadin-app-layout/issues/163
+        startButton.getStyle().set("margin-bottom", "4rem");
 
         add(leadInText, aboutPageLink, name, avatars, link, startButton);
     }
