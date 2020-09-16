@@ -9,6 +9,7 @@ import com.vaadin.flow.component.customfield.CustomField;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
+import com.vaadin.flow.component.orderedlayout.FlexLayout.FlexWrap;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -25,7 +26,7 @@ import java.util.List;
 @RouteAlias(value = "", layout = MainView.class)
 @PageTitle("Your profile")
 @CssImport("styles/views/yourprofile/yourprofile-view.css")
-public class YourProfileView extends FlexLayout implements BeforeEnterObserver {
+public class YourProfileView extends VerticalLayout implements BeforeEnterObserver {
 
     MainView mainView;
     TextField name;
@@ -35,9 +36,8 @@ public class YourProfileView extends FlexLayout implements BeforeEnterObserver {
         this.mainView = mainView;
 
         setId("your-profile-view");
-        setSizeFull();
-        setAlignItems(Alignment.CENTER);
-        setJustifyContentMode(JustifyContentMode.CENTER);
+        addClassName("your-profile-view");
+        setWidthFull();
 
         Html leadInText = new Html("<div>" +
                   "<h3>Welcome to the Collaboration Engine Demo</h3>" +
@@ -68,12 +68,10 @@ public class YourProfileView extends FlexLayout implements BeforeEnterObserver {
         Button startButton = new Button("Start editing", e -> UI.getCurrent().navigate(PersonsView.class));
         startButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-        VerticalLayout center = new VerticalLayout(leadInText, aboutPageLink, name, avatars, link, startButton);
-        center.setHorizontalComponentAlignment(Alignment.END, link);
-        center.setWidth("100%");
-        center.setMaxWidth("400px");
+        // workaround https://github.com/vaadin/vaadin-app-layout/issues/163
+        startButton.getStyle().set("margin-bottom", "4rem");
 
-        add(center);
+        add(leadInText, aboutPageLink, name, avatars, link, startButton);
     }
 
     @Override
