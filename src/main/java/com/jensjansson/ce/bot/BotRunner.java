@@ -6,31 +6,18 @@ import static com.jensjansson.ce.bot.BotAvatarUtil.getRealUserCount;
 import static com.jensjansson.ce.bot.BotAvatarUtil.onUsersChanged;
 import static com.jensjansson.ce.bot.BotAvatarUtil.removeAvatar;
 
-import com.vaadin.collaborationengine.ActivationHandler;
+import com.jensjansson.ce.data.service.PersonService;
+
 import com.vaadin.collaborationengine.CollaborationEngine;
-import com.vaadin.collaborationengine.ConnectionContext;
 import com.vaadin.collaborationengine.TopicConnection;
 import com.vaadin.collaborationengine.UserInfo;
-import com.vaadin.flow.server.Command;
-import com.vaadin.flow.shared.Registration;
 
 public class BotRunner implements Runnable {
 
-    public static void onUserJoined(String topicId) {
-        CollaborationEngine.getInstance()
-                .openTopicConnection(new ConnectionContext() {
-                    @Override
-                    public Registration setActivationHandler(
-                            ActivationHandler activationHandler) {
-                        activationHandler.setActive(true);
-                        return null;
-                    }
-
-                    @Override
-                    public void dispatchAction(Command command) {
-                        command.execute();
-                    }
-                }, topicId, topic -> {
+    public static void onUserJoined(String topicId, Integer personId,
+            PersonService personService) {
+        CollaborationEngine.getInstance().openTopicConnection(
+                new EagerConnectionContext(), topicId, topic -> {
                     if (getBotCount(topic) > 0) {
                         // Only one bot at a time for each item
                         return null;
@@ -41,7 +28,8 @@ public class BotRunner implements Runnable {
                      * very serious issue as long as the number of items in the
                      * grid (and thus bot threads) is limited as currently.
                      */
-                    BotRunner botRunner = new BotRunner(topic);
+                    BotRunner botRunner = new BotRunner(topic, personId,
+                            personService);
                     new Thread(botRunner).start();
                     return () -> botRunner.shouldStop = true;
                 });
@@ -51,8 +39,14 @@ public class BotRunner implements Runnable {
     private UserInfo user;
     private volatile boolean shouldStop;
 
-    public BotRunner(TopicConnection topic) {
+    private Integer personId;
+    private PersonService personService;
+
+    public BotRunner(TopicConnection topic, Integer personId,
+            PersonService personService) {
         this.topic = topic;
+        this.personId = personId;
+        this.personService = personService;
         user = BotUserGenerator.generateBotUser();
 
         onUsersChanged(topic, () -> {
@@ -72,8 +66,20 @@ public class BotRunner implements Runnable {
 
         addAvatar(topic, user);
 
+        int editCounter = 0;
+        int saveAfter = generateNumberOfEditsBeforeSave();
+
         while (!shouldStop) {
             BotFieldEditor.editRandomField(topic, user);
+
+            editCounter++;
+            if (editCounter >= saveAfter) {
+                sleepRandom(1, 2);
+                BotSaver.save(topic, personId, personService, user);
+
+                editCounter = 0;
+                saveAfter = generateNumberOfEditsBeforeSave();
+            }
         }
         removeAvatar(topic, user);
     }
@@ -91,6 +97,10 @@ public class BotRunner implements Runnable {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    private static int generateNumberOfEditsBeforeSave() {
+        return 2 + (int) (Math.random() * 4);
     }
 
 }
