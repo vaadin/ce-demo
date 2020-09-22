@@ -8,10 +8,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.logging.log4j.util.Supplier;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.generator.DataGenerator;
 import com.jensjansson.ce.views.persons.PersonsView;
 
+import com.vaadin.collaborationengine.CollaborationBinder;
 import com.vaadin.collaborationengine.CollaborationBinderUtil;
 import com.vaadin.collaborationengine.TopicConnection;
 import com.vaadin.collaborationengine.UserInfo;
@@ -48,9 +52,13 @@ class BotFieldEditor {
             CollaborationBinderUtil.addEditor(topic, propertyName, user);
 
             sleepRandom(3, 5);
-            CollaborationBinderUtil.setFieldValue(topic, propertyName, value);
 
-            sleepRandom(0, 2);
+            // Skip changing the value if there's another focused user
+            if (getEditorCount(topic, propertyName) < 2) {
+                CollaborationBinderUtil.setFieldValue(topic, propertyName,
+                        value);
+                sleepRandom(0, 2);
+            }
         }
 
         CollaborationBinderUtil.removeEditor(topic, propertyName, user);
@@ -66,6 +74,24 @@ class BotFieldEditor {
         return collection.stream()
                 .skip((int) (collection.size() * Math.random())).findFirst()
                 .get();
+    }
+
+    private static int getEditorCount(TopicConnection topic,
+            String propertyName) {
+        String fieldStateJson = (String) topic
+                .getNamedMap(CollaborationBinder.class.getName())
+                .get(propertyName);
+        if (fieldStateJson == null || fieldStateJson.isEmpty()) {
+            return 0;
+        }
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            ObjectNode jsonNode = (ObjectNode) objectMapper
+                    .readTree(fieldStateJson);
+            return jsonNode.get("editors").size();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
