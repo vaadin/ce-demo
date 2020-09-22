@@ -11,6 +11,7 @@ import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.CollaborationBinder;
 import com.vaadin.collaborationengine.CollaborationEngine;
 import com.vaadin.collaborationengine.CollaborationMap;
+import com.vaadin.collaborationengine.TopicConnection;
 import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.button.Button;
@@ -76,7 +77,10 @@ public class PersonsView extends Div {
     private CollaborationMap saveMap;
     private Registration topicConnectionRegistration;
 
+    private PersonService personService;
+
     public PersonsView(@Autowired PersonService personService, MainView mainView) {
+        this.personService = personService;
         setId("persons-view");
         // Configure Grid
         localUser = new UserInfo(UUID.randomUUID().toString());
@@ -217,7 +221,7 @@ public class PersonsView extends Div {
         password.setValue("");
 
         if (topicId != null) {
-            BotRunner.onUserJoined(topicId);
+            BotRunner.onUserJoined(topicId, value.getId(), personService);
         }
         connectToSaveNotifications(topicId);
         updateEditorLayoutVisibility();
@@ -225,19 +229,23 @@ public class PersonsView extends Div {
 
     private void sendSaveNotification() {
         if (saveMap != null) {
-            ObjectMapper om = new ObjectMapper();
-            ObjectNode objectNode = om.createObjectNode();
-            objectNode.put("userName", localUser.getName());
-            objectNode.put("userId", localUser.getId());
-            objectNode.put("messageId", UUID.randomUUID().toString());
-            saveMap.put("save", objectNode.toString());
-            // Value needs to be cleared right away, or the notification
-            // will be shown when starting to edit the item, and thus
-            // connecting to the topic.
-            saveMap.put("save", null);
+            sendSaveNotification(saveMap, localUser);
         } else {
             showSaveNotification(localUser.getName());
         }
+    }
+
+    public static void sendSaveNotification(CollaborationMap map, UserInfo user) {
+        ObjectMapper om = new ObjectMapper();
+        ObjectNode objectNode = om.createObjectNode();
+        objectNode.put("userName", user.getName());
+        objectNode.put("userId", user.getId());
+        objectNode.put("messageId", UUID.randomUUID().toString());
+        map.put("save", objectNode.toString());
+        // Value needs to be cleared right away, or the notification
+        // will be shown when starting to edit the item, and thus
+        // connecting to the topic.
+        map.put("save", null);
     }
 
     private void connectToSaveNotifications(String topicId) {
