@@ -1,10 +1,15 @@
 package com.jensjansson.ce.bot;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.CollaborationMap;
@@ -31,11 +36,11 @@ class BotAvatarUtil {
             SerializableFunction<Stream<UserInfo>, Stream<UserInfo>> updater) {
         CollaborationMap map = getMap(topic);
         while (true) {
-            List<UserInfo> oldValue = (List<UserInfo>) map.get(MAP_KEY);
-            List<UserInfo> newValue = updater.apply(
-                    oldValue != null ? oldValue.stream() : Stream.empty())
+            String oldValue = (String) map.get(MAP_KEY);
+            List<UserInfo> oldUsers = jsonToUsers(oldValue);
+            List<UserInfo> newUsers = updater.apply(oldUsers.stream())
                     .collect(Collectors.toList());
-            if (map.replace(MAP_KEY, oldValue, newValue)) {
+            if (map.replace(MAP_KEY, oldValue, usersToJson(newUsers))) {
                 break;
             }
         }
@@ -58,7 +63,7 @@ class BotAvatarUtil {
     private static int getUserCount(TopicConnection topic,
             Predicate<UserInfo> filter) {
         CollaborationMap map = getMap(topic);
-        List<UserInfo> users = (List<UserInfo>) map.get(MAP_KEY);
+        List<UserInfo> users = jsonToUsers((String) map.get(MAP_KEY));
         if (users == null) {
             return 0;
         }
@@ -67,5 +72,30 @@ class BotAvatarUtil {
 
     private static CollaborationMap getMap(TopicConnection topic) {
         return topic.getNamedMap(CollaborationAvatarGroup.class.getName());
+    }
+
+    private static String usersToJson(List<UserInfo> users) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.writeValueAsString(users);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(
+                    "Failed to encode the list of users as a JSON string.", e);
+        }
+    }
+
+    private static List<UserInfo> jsonToUsers(String json) {
+        if (json == null) {
+            return Collections.emptyList();
+        }
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.readValue(json,
+                    new TypeReference<List<UserInfo>>() {
+                    });
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(
+                    "Failed to parse the list of users from a JSON string.", e);
+        }
     }
 }
