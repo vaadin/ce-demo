@@ -23,7 +23,7 @@ class BotSaver {
         personService.update(person);
 
         CollaborationEngine.getInstance().openTopicConnection(
-                new EagerConnectionContext(), "refreshGrid", topic -> {
+                new EagerConnectionContext(), "refreshGrid", user, topic -> {
                     topic.getNamedMap("refreshGrid").put("refreshGrid",
                             UUID.randomUUID().toString());
                     return null;

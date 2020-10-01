@@ -146,7 +146,7 @@ public class PersonsView extends Div {
 
         add(splitLayout);
 
-        CollaborationEngine.getInstance().openTopicConnection(this, "refreshGrid", topicConnection -> {
+        CollaborationEngine.getInstance().openTopicConnection(this, "refreshGrid", localUser, topicConnection -> {
             refreshGridMap = topicConnection.getNamedMap("refreshGrid");
             refreshGridMap.subscribe(e -> grid.getDataProvider().refreshAll());
             return () -> refreshGridMap = null;
@@ -221,7 +221,7 @@ public class PersonsView extends Div {
         password.setValue("");
 
         if (topicId != null) {
-            BotRunner.onUserJoined(topicId, value.getId(), personService);
+            BotRunner.onUserJoined(topicId, localUser, value.getId(), personService);
         }
         connectToSaveNotifications(topicId);
         updateEditorLayoutVisibility();
@@ -255,7 +255,7 @@ public class PersonsView extends Div {
         }
         if (topicId != null) {
             topicConnectionRegistration = CollaborationEngine.getInstance()
-                    .openTopicConnection(this, topicId, topicConnection -> {
+                    .openTopicConnection(this, topicId, localUser, topicConnection -> {
                         saveMap = topicConnection.getNamedMap("save");
                         saveMap.subscribe(e -> {
                             if (e.getValue() == null) {

@@ -14,10 +14,10 @@ import com.vaadin.collaborationengine.UserInfo;
 
 public class BotRunner implements Runnable {
 
-    public static void onUserJoined(String topicId, Integer personId,
+    public static void onUserJoined(String topicId, UserInfo localUser, Integer personId,
             PersonService personService) {
         CollaborationEngine.getInstance().openTopicConnection(
-                new EagerConnectionContext(), topicId, topic -> {
+                new EagerConnectionContext(), topicId, localUser, topic -> {
                     if (getBotCount(topic) > 0) {
                         // Only one bot at a time for each item
                         return null;
