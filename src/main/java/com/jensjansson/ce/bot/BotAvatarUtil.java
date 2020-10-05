@@ -35,15 +35,16 @@ class BotAvatarUtil {
     private static void updateAvatars(TopicConnection topic,
             SerializableFunction<Stream<UserInfo>, Stream<UserInfo>> updater) {
         CollaborationMap map = getMap(topic);
-        while (true) {
-            String oldValue = (String) map.get(MAP_KEY);
-            List<UserInfo> oldUsers = jsonToUsers(oldValue);
-            List<UserInfo> newUsers = updater.apply(oldUsers.stream())
-                    .collect(Collectors.toList());
-            if (map.replace(MAP_KEY, oldValue, usersToJson(newUsers))) {
-                break;
-            }
-        }
+        String oldValue = (String) map.get(MAP_KEY);
+        List<UserInfo> oldUsers = jsonToUsers(oldValue);
+        List<UserInfo> newUsers = updater.apply(oldUsers.stream())
+                .collect(Collectors.toList());
+        map.replace(MAP_KEY, oldValue, usersToJson(newUsers))
+                .thenAccept(success -> {
+                    if (!success) {
+                        updateAvatars(topic, updater);
+                    }
+                });
     }
 
     public static void onUsersChanged(TopicConnection topic, Command action) {
