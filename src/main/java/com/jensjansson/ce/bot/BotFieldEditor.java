@@ -1,24 +1,21 @@
 package com.jensjansson.ce.bot;
 
-import static com.jensjansson.ce.bot.BotRunner.sleepRandom;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.logging.log4j.util.Supplier;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.generator.DataGenerator;
 import com.jensjansson.ce.views.persons.PersonsView;
+import org.apache.logging.log4j.util.Supplier;
 
 import com.vaadin.collaborationengine.CollaborationBinder;
 import com.vaadin.collaborationengine.CollaborationBinderUtil;
 import com.vaadin.collaborationengine.TopicConnection;
 import com.vaadin.collaborationengine.UserInfo;
+
+import static com.jensjansson.ce.bot.BotRunner.sleepRandom;
 
 class BotFieldEditor {
 
@@ -78,20 +75,13 @@ class BotFieldEditor {
 
     private static int getEditorCount(TopicConnection topic,
             String propertyName) {
-        String fieldStateJson = (String) topic
+        ObjectNode fieldStateJson = topic
                 .getNamedMap(CollaborationBinder.class.getName())
-                .get(propertyName);
+                .get(propertyName, ObjectNode.class);
         if (fieldStateJson == null || fieldStateJson.isEmpty()) {
             return 0;
         }
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            ObjectNode jsonNode = (ObjectNode) objectMapper
-                    .readTree(fieldStateJson);
-            return jsonNode.get("editors").size();
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        return fieldStateJson.get("editors").size();
     }
 
 }

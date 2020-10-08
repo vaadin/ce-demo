@@ -1,15 +1,12 @@
 package com.jensjansson.ce.bot;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.CollaborationMap;
@@ -21,6 +18,8 @@ import com.vaadin.flow.server.Command;
 class BotAvatarUtil {
 
     private static final String MAP_KEY = "users";
+    private static final TypeReference<List<UserInfo>> LIST_USER_INFO_TYPE_REF = new TypeReference<List<UserInfo>>() {
+    };
 
     public static void addAvatar(TopicConnection topic, UserInfo user) {
         updateAvatars(topic,
@@ -35,16 +34,14 @@ class BotAvatarUtil {
     private static void updateAvatars(TopicConnection topic,
             SerializableFunction<Stream<UserInfo>, Stream<UserInfo>> updater) {
         CollaborationMap map = getMap(topic);
-        String oldValue = (String) map.get(MAP_KEY);
-        List<UserInfo> oldUsers = jsonToUsers(oldValue);
+        List<UserInfo> oldUsers = map.get(MAP_KEY, LIST_USER_INFO_TYPE_REF);
         List<UserInfo> newUsers = updater.apply(oldUsers.stream())
                 .collect(Collectors.toList());
-        map.replace(MAP_KEY, oldValue, usersToJson(newUsers))
-                .thenAccept(success -> {
-                    if (!success) {
-                        updateAvatars(topic, updater);
-                    }
-                });
+        map.replace(MAP_KEY, oldUsers, newUsers).thenAccept(success -> {
+            if (!success) {
+                updateAvatars(topic, updater);
+            }
+        });
     }
 
     public static void onUsersChanged(TopicConnection topic, Command action) {
@@ -64,7 +61,7 @@ class BotAvatarUtil {
     private static int getUserCount(TopicConnection topic,
             Predicate<UserInfo> filter) {
         CollaborationMap map = getMap(topic);
-        List<UserInfo> users = jsonToUsers((String) map.get(MAP_KEY));
+        List<UserInfo> users = map.get(MAP_KEY, LIST_USER_INFO_TYPE_REF);
         if (users == null) {
             return 0;
         }
@@ -75,28 +72,4 @@ class BotAvatarUtil {
         return topic.getNamedMap(CollaborationAvatarGroup.class.getName());
     }
 
-    private static String usersToJson(List<UserInfo> users) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            return objectMapper.writeValueAsString(users);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(
-                    "Failed to encode the list of users as a JSON string.", e);
-        }
-    }
-
-    private static List<UserInfo> jsonToUsers(String json) {
-        if (json == null) {
-            return Collections.emptyList();
-        }
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            return objectMapper.readValue(json,
-                    new TypeReference<List<UserInfo>>() {
-                    });
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(
-                    "Failed to parse the list of users from a JSON string.", e);
-        }
-    }
 }
