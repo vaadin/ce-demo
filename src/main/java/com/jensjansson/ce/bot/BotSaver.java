@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
 import com.jensjansson.ce.views.persons.PersonsView;
@@ -42,17 +44,17 @@ class BotSaver {
 
     private static <T> T getFieldValue(TopicConnection topic,
             String propertyName, Class<T> valueType) {
-        String json = (String) topic
+        ObjectNode fieldStateJson = topic
                 .getNamedMap(CollaborationBinder.class.getName())
-                .get(propertyName);
-        if (json == null || json.isEmpty()) {
+                .get(propertyName, ObjectNode.class);
+        if (fieldStateJson == null || fieldStateJson.isEmpty()) {
             return null;
         }
 
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            JsonNode jsonNode = objectMapper.readTree(json);
-            return objectMapper.treeToValue(jsonNode.get("value"), valueType);
+            return objectMapper.treeToValue(fieldStateJson.get("value"),
+                    valueType);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

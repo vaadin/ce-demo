@@ -1,5 +1,10 @@
 package com.jensjansson.ce.views.persons;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -7,11 +12,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jensjansson.ce.bot.BotRunner;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
+import com.jensjansson.ce.views.main.MainView;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.vaadin.artur.helpers.CrudServiceDataProvider;
+
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.CollaborationBinder;
 import com.vaadin.collaborationengine.CollaborationEngine;
 import com.vaadin.collaborationengine.CollaborationMap;
-import com.vaadin.collaborationengine.TopicConnection;
 import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.component.AbstractField;
 import com.vaadin.flow.component.button.Button;
@@ -35,15 +43,6 @@ import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.shared.Registration;
-
-import com.jensjansson.ce.views.main.MainView;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.vaadin.artur.helpers.CrudServiceDataProvider;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
 
 @Route(value = "persons", layout = MainView.class)
 @PageTitle("Persons")
@@ -88,7 +87,7 @@ public class PersonsView extends Div {
         localUser.setImage(mainView.getUserAvatar());
 
         avatarGroup = new CollaborationAvatarGroup(
-                localUser);
+                localUser, null);
         avatarGroup.setMaxItemsVisible(4);
 
         grid = new Grid<>(Person.class);
@@ -258,12 +257,12 @@ public class PersonsView extends Div {
                     .openTopicConnection(this, topicId, localUser, topicConnection -> {
                         saveMap = topicConnection.getNamedMap("save");
                         saveMap.subscribe(e -> {
-                            if (e.getValue() == null) {
+                            if (e.getValue(Object.class) == null) {
                                 return;
                             }
                             ObjectMapper om = new ObjectMapper();
                             try {
-                                JsonNode jsonNode = om.readTree((String) e.getValue());
+                                JsonNode jsonNode = om.readTree(e.getValue(String.class));
                                 String savingUser = jsonNode.get("userName").asText();
                                 String savingUserId = jsonNode.get("userId").asText();
                                 if (Objects.equals(savingUserId, localUser.getId())) {
