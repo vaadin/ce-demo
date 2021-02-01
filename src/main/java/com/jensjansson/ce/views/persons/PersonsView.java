@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jensjansson.ce.bot.BotRunner;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
+import com.jensjansson.ce.components.comments.Comments;
 import com.jensjansson.ce.views.main.MainView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.vaadin.artur.helpers.CrudServiceDataProvider;
@@ -40,6 +41,7 @@ import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.provider.Query;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.shared.Registration;
@@ -89,7 +91,7 @@ public class PersonsView extends Div {
 
         avatarGroup = new CollaborationAvatarGroup(localUser, null);
         avatarGroup.setMaxItemsVisible(4);
-
+        email.setValueChangeMode(ValueChangeMode.EAGER);
         grid = new Grid<>(Person.class);
         grid.setColumns("firstName", "lastName", "email");
         CrudServiceDataProvider<Person, Void> dataProvider = new CrudServiceDataProvider<>(
@@ -145,7 +147,11 @@ public class PersonsView extends Div {
         splitLayout.getElement().executeJs("window._setSplitLayout(this)");
 
         createGridLayout(splitLayout);
-        createEditorLayout(splitLayout);
+        Div form = createEditorLayout();
+        comments = createCommentsLayout();
+        Div layout = new Div(form, comments);
+        layout.addClassName("form-and-comments");
+        splitLayout.addToSecondary(layout);
 
         add(splitLayout);
 
@@ -163,7 +169,12 @@ public class PersonsView extends Div {
         dataProvider.fetch(new Query<>()).findFirst().ifPresent(grid::select);
     }
 
-    private void createEditorLayout(SplitLayout splitLayout) {
+    private Comments createCommentsLayout() {
+        Comments comments = new Comments(localUser);
+        return comments;
+    }
+
+    private Div createEditorLayout() {
         editorLayoutDiv = new Div();
         editorLayoutDiv.setId("editor-layout");
 
@@ -185,7 +196,8 @@ public class PersonsView extends Div {
         addFormItem(editorDiv, formLayout, password, "Password");
         createButtonLayout(editorLayoutDiv);
 
-        splitLayout.addToSecondary(editorLayoutDiv);
+        return editorLayoutDiv;
+
     }
 
     private void createButtonLayout(Div editorLayoutDiv) {
@@ -223,6 +235,7 @@ public class PersonsView extends Div {
         }
         binder.setTopic(topicId, () -> value);
         avatarGroup.setTopic(topicId);
+        comments.setTopic(topicId);
         // The password field isn't bound through the binder, so handle that
         password.setValue("");
 
@@ -302,6 +315,7 @@ public class PersonsView extends Div {
     }
 
     private void updateEditorLayoutVisibility() {
+        comments.setVisible(person != null);
         editorLayoutDiv.setVisible(person != null);
     }
 }
