@@ -39,6 +39,8 @@ import com.vaadin.flow.theme.lumo.Lumo;
 @PWA(name = "CE Demo", shortName = "CE Demo")
 @Theme(value = Lumo.class, variant = Lumo.LIGHT)
 @CssImport("styles/views/main/main-view.css")
+@CssImport("styles/components/comments.css")
+
 @org.springframework.stereotype.Component
 @UIScope
 @Push
