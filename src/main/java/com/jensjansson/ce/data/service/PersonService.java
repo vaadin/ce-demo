@@ -1,7 +1,8 @@
 package com.jensjansson.ce.data.service;
 
-import com.jensjansson.ce.data.entity.Person;
+import java.util.List;
 
+import com.jensjansson.ce.data.entity.Person;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.vaadin.artur.helpers.CrudService;
@@ -20,4 +21,7 @@ public class PersonService extends CrudService<Person, Integer> {
         return repository;
     }
 
+    public List<Person> findByQuery(String query) {
+        return getRepository().findAll();
+    }
 }

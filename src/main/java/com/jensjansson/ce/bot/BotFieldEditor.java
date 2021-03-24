@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.generator.DataGenerator;
-import com.jensjansson.ce.views.persons.PersonsView;
+import com.jensjansson.ce.views.persons.EditorView;
 import org.apache.logging.log4j.util.Supplier;
 
 import com.vaadin.collaborationengine.CollaborationBinder;
@@ -28,7 +28,7 @@ class BotFieldEditor {
                 () -> generatePerson().getLastName());
         fieldToValueProvider.put("email", () -> generatePerson().getEmail());
         fieldToValueProvider.put("happiness",
-                () -> getRandomEntry(PersonsView.HAPPINESS_VALUES));
+                () -> getRandomEntry(EditorView.HAPPINESS_VALUES));
     }
 
     static void editRandomField(TopicConnection topic, UserInfo user) {
@@ -41,7 +41,7 @@ class BotFieldEditor {
 
         if (propertyName.equals("happiness")) {
             CollaborationBinderUtil.addEditor(topic, propertyName, user,
-                    PersonsView.HAPPINESS_VALUES.indexOf(value));
+                    EditorView.HAPPINESS_VALUES.indexOf(value));
             // RadioButtonGroup changes the value immediately when
             CollaborationBinderUtil.setFieldValue(topic, propertyName, value);
             sleepRandom(3, 5);

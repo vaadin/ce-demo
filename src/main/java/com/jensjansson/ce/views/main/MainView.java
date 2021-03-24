@@ -1,163 +1,148 @@
 package com.jensjansson.ce.views.main;
 
-import java.util.Arrays;
-import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import com.jensjansson.ce.views.about.AboutView;
-import com.jensjansson.ce.views.persons.PersonsView;
+import com.jensjansson.ce.views.persons.EmployeesView;
 import com.jensjansson.ce.views.yourprofile.YourProfileView;
 
+import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
-import com.vaadin.flow.component.dependency.CssImport;
-import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.page.Push;
-import com.vaadin.flow.component.tabs.Tab;
-import com.vaadin.flow.component.tabs.Tabs;
-import com.vaadin.flow.component.tabs.TabsVariant;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.router.RouterLink;
-import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.spring.annotation.UIScope;
-import com.vaadin.flow.theme.Theme;
-import com.vaadin.flow.theme.lumo.Lumo;
-
-/**
- * The main view is a top-level placeholder for other views.
- */
-@JsModule("./styles/shared-styles.js")
-@PWA(name = "CE Demo", shortName = "CE Demo")
-@Theme(value = Lumo.class, variant = Lumo.LIGHT)
-@CssImport("styles/views/main/main-view.css")
-@CssImport("styles/components/comments.css")
 
 @org.springframework.stereotype.Component
 @UIScope
-@Push
 public class MainView extends AppLayout {
 
-    private final Tabs menu;
+    private Div menu;
     private H1 viewTitle;
     private Avatar avatar;
-
-    private String userName = "Anonymous User";
-    private String userAvatar = "images/avatars/" + ThreadLocalRandom.current().nextInt(1, 8 + 1) + ".png";
+    private UserInfo localUser;
+    private Span userLabel;
 
     public MainView() {
+        localUser = new UserInfo(UUID.randomUUID().toString());
+        localUser.setName("Anonymous User");
+        localUser.setImage("images/avatars/"
+                + ThreadLocalRandom.current().nextInt(1, 8 + 1) + ".png");
+
         setPrimarySection(Section.DRAWER);
         addToNavbar(true, createHeaderContent());
-        menu = createMenu();
-        addToDrawer(createDrawerContent(menu));
+        addToDrawer(createSideMenu());
     }
 
     private Component createHeaderContent() {
-        HorizontalLayout layout = new HorizontalLayout();
-        layout.setId("header");
-        layout.getThemeList().set("dark", true);
-        layout.setWidthFull();
-        layout.setSpacing(false);
-        layout.setAlignItems(FlexComponent.Alignment.CENTER);
-        layout.add(new DrawerToggle());
+        DrawerToggle drawerToggle = new DrawerToggle();
+        drawerToggle.setThemeName("contrast");
         viewTitle = new H1();
-        layout.add(viewTitle);
-        avatar = new Avatar(userName, userAvatar);
-        avatar.getElement().addEventListener("click", e -> UI.getCurrent().navigate(YourProfileView.class));
-        layout.add(avatar);
+        viewTitle.addClassNames("m-0", "text-l");
+        Div layout = new Div();
+        layout.addClassNames("bg-base", "border-b", "border-contrast-10",
+                "box-border", "flex", "flex-row", "h-xl", "items-center",
+                "w-full");
+        layout.add(drawerToggle, viewTitle);
         return layout;
     }
 
-    private Component createDrawerContent(Tabs menu) {
-        VerticalLayout layout = new VerticalLayout();
-        layout.setSizeFull();
-        layout.setPadding(false);
-        layout.setSpacing(false);
-        layout.getThemeList().set("spacing-s", true);
-        layout.setAlignItems(FlexComponent.Alignment.STRETCH);
-        HorizontalLayout logoLayout = new HorizontalLayout();
-        logoLayout.setId("logo");
-        logoLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        logoLayout.add(new Image("images/logos/18.png", "CE Demo logo"));
-        logoLayout.add(new H1("Collaboration Engine Demo"));
-        layout.add(logoLayout, menu);
+    private Component createSideMenu() {
+        H2 header = new H2("Collaboration Engine Demo");
+        header.addClassNames("flex", "items-center", "h-xl", "m-0", "px-m",
+                "text-m");
+        menu = createMenuLinks();
+        HorizontalLayout avatar = createMenuAvatar();
+
+        Div layout = new Div(header, menu, avatar);
+        layout.addClassNames("bg-contrast-5", "flex", "flex-col",
+                "items-strech", "min-h-full");
         return layout;
     }
 
-    private Tabs createMenu() {
-        final Tabs tabs = new Tabs();
-        tabs.setOrientation(Tabs.Orientation.VERTICAL);
-        tabs.addThemeVariants(TabsVariant.LUMO_MINIMAL);
-        tabs.setId("tabs");
-        tabs.add(createMenuItems());
-        return tabs;
+    private Div createMenuLinks() {
+        Div menu = new Div();
+
+        menu.add(createLink(VaadinIcon.EDIT, "Employees", EmployeesView.class),
+                createLink(VaadinIcon.PICTURE, "About", AboutView.class));
+        menu.addClassNames("p-s", "box-border", "flex", "flex-col",
+                "flex-grow");
+        menu.setWidthFull();
+        return menu;
     }
 
-    private Component[] createMenuItems() {
-        RouterLink[] links = new RouterLink[] {
-            new RouterLink("Persons", PersonsView.class),
-            new RouterLink("About", AboutView.class)
-        };
-        return Arrays.stream(links).map(MainView::createTab).toArray(Tab[]::new);
+    private RouterLink createLink(VaadinIcon vaadinIcon, String text,
+            Class<? extends Component> view) {
+        RouterLink link = new RouterLink(null, view);
+        Icon icon = vaadinIcon.create();
+        icon.addClassNames("box-border", "icon-m", "me-s", "p-xs");
+        Span span = new Span(text);
+        span.addClassNames("text-s", "font-medium");
+        link.add(icon, span);
+        link.addClassNames("rounded-s", "h-m", "px-s", "mx-s", "flex",
+                "items-center", "box-border");
+        return link;
     }
 
-    private static Tab createTab(Component content) {
-        final Tab tab = new Tab();
-        tab.add(content);
-        return tab;
+    private HorizontalLayout createMenuAvatar() {
+        avatar = new Avatar(localUser.getName(), localUser.getImage());
+        avatar.addClassNames("pointer");
+        userLabel = new Span(localUser.getName());
+        HorizontalLayout layout = new HorizontalLayout(avatar, userLabel);
+        layout.addClassNames("p-m", "pointer");
+        layout.setAlignItems(FlexComponent.Alignment.CENTER);
+        layout.addClickListener(event -> {
+            layout.getUI().ifPresent(ui -> ui.navigate(YourProfileView.class));
+        });
+        return layout;
     }
 
     @Override
     protected void afterNavigation() {
         super.afterNavigation();
-        updateChrome();
+        updateSelectedView();
+        String title = getContent().getClass().getAnnotation(PageTitle.class)
+                .value();
+        viewTitle.setText(title);
     }
 
-    private void updateChrome() {
-        menu.setSelectedTab(getTabWithCurrentRoute().orElse(null));
-        viewTitle.setText(getCurrentPageTitle());
-    }
-
-    private Optional<Tab> getTabWithCurrentRoute() {
+    private void updateSelectedView() {
         String currentRoute = RouteConfiguration.forSessionScope()
                 .getUrl(getContent().getClass());
-        return menu.getChildren().filter(tab -> hasLink(tab, currentRoute))
-                .findFirst().map(Tab.class::cast);
+        menu.getChildren().forEach(component -> {
+            RouterLink link = ((RouterLink) component);
+            if (link.getHref().equals(currentRoute)) {
+                link.addClassName("bg-primary-10");
+            } else {
+                link.removeClassName("bg-primary-10");
+            }
+        });
     }
 
-    private boolean hasLink(Component tab, String currentRoute) {
-        return tab.getChildren().filter(RouterLink.class::isInstance)
-                .map(RouterLink.class::cast).map(RouterLink::getHref)
-                .anyMatch(currentRoute::equals);
-    }
-
-    private String getCurrentPageTitle() {
-        return getContent().getClass().getAnnotation(PageTitle.class).value();
-    }
-
-    public String getUserName() {
-        return userName;
+    public UserInfo getLocalUser() {
+        return localUser;
     }
 
     public void setUserName(String userName) {
-        this.userName = userName;
+        localUser.setName(userName);
         avatar.setName(userName);
+        userLabel.setText(userName);
     }
 
-    public String getUserAvatar() {
-        return userAvatar;
-    }
-
-    public void setUserAvatar(String avatar) {
-        this.userAvatar = avatar;
-        this.avatar.setImage(avatar);
+    public void setUserAvatar(String avatarUrl) {
+        localUser.setImage(avatarUrl);
+        avatar.setImage(avatarUrl);
     }
 }
