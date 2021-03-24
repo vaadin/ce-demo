@@ -3,21 +3,19 @@ package com.jensjansson.ce.views.about;
 import com.jensjansson.ce.views.main.MainView;
 
 import com.vaadin.flow.component.Html;
-import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
 @Route(value = "about", layout = MainView.class)
 @PageTitle("About")
-@CssImport("styles/views/about/about-view.css")
 public class AboutView extends FlexLayout {
 
     public AboutView() {
-        addClassName("about-view");
+        addClassNames("m-xl", "flex", "flex-col", "items-center");
 
         //@formatter:off
-        String content = "<div>" +
+        String content = "<div class=\"max-w-40em\">" +
               "<h3>Demo features</h3>" +
               "<p>This application demonstrates the collaborative experiences that you can create with Vaadin Collaboration Engine. " +
                 "Clicking a table row in the persons view opens a form for editing the information of that person. " +

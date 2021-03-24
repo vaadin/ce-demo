@@ -1,0 +1,21 @@
+@import 'generic-styles.css';
+
+.pointer {
+  cursor: pointer;
+}
+
+.max-w-22em{
+  max-width: 22em;
+}
+
+.max-w-40em{
+  max-width: 40em;
+}
+
+.rounded-50 {
+  border-radius: 50%;
+}
+
+.width-auto {
+  width: auto;
+}
