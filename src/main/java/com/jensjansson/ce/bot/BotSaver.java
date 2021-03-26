@@ -17,9 +17,8 @@ import com.vaadin.collaborationengine.UserInfo;
 class BotSaver {
 
     static void save(CollaborationEngine ce, TopicConnection personTopic,
-            Integer personId, PersonService personService, UserInfo user) {
-        Person person = getPersonFromFields(personTopic);
-        person.setId(personId);
+            Person person, PersonService personService, UserInfo user) {
+        getPersonFromFields(person, personTopic);
         personService.update(person);
         ce.openTopicConnection(new EagerConnectionContext(), "refreshGrid",
                 user, topic -> {
@@ -30,8 +29,8 @@ class BotSaver {
         EditorView.sendSaveNotification(personTopic.getNamedMap("save"), user);
     }
 
-    private static Person getPersonFromFields(TopicConnection topic) {
-        Person person = new Person();
+    private static Person getPersonFromFields(Person person,
+            TopicConnection topic) {
         person.setFirstName(getFieldValue(topic, "firstName", String.class));
         person.setLastName(getFieldValue(topic, "lastName", String.class));
         person.setEmail(getFieldValue(topic, "email", String.class));
