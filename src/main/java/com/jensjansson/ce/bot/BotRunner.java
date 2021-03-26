@@ -1,5 +1,6 @@
 package com.jensjansson.ce.bot;
 
+import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
 
 import com.vaadin.collaborationengine.CollaborationEngine;
@@ -15,7 +16,7 @@ import static com.jensjansson.ce.bot.BotAvatarUtil.removeAvatar;
 public class BotRunner implements Runnable {
 
     public static void onUserJoined(String topicId, UserInfo localUser,
-            Integer personId, PersonService personService) {
+            Person person, PersonService personService) {
         CollaborationEngine ce = CollaborationEngine.getInstance();
         ce.openTopicConnection(new EagerConnectionContext(), topicId, localUser,
                 topic -> {
@@ -29,7 +30,7 @@ public class BotRunner implements Runnable {
                      * very serious issue as long as the number of items in the
                      * grid (and thus bot threads) is limited as currently.
                      */
-                    BotRunner botRunner = new BotRunner(ce, topic, personId,
+                    BotRunner botRunner = new BotRunner(ce, topic, person,
                             personService);
                     new Thread(botRunner).start();
                     return () -> botRunner.shouldStop = true;
@@ -41,14 +42,14 @@ public class BotRunner implements Runnable {
     private UserInfo user;
     private volatile boolean shouldStop;
 
-    private Integer personId;
+    private Person person;
     private PersonService personService;
 
     public BotRunner(CollaborationEngine ce, TopicConnection topic,
-            Integer personId, PersonService personService) {
+            Person person, PersonService personService) {
         this.ce = ce;
         this.topic = topic;
-        this.personId = personId;
+        this.person = person;
         this.personService = personService;
         user = BotUserGenerator.generateBotUser();
 
@@ -78,7 +79,7 @@ public class BotRunner implements Runnable {
             editCounter++;
             if (editCounter >= saveAfter) {
                 sleepRandom(1, 2);
-                BotSaver.save(ce, topic, personId, personService, user);
+                BotSaver.save(ce, topic, person, personService, user);
 
                 editCounter = 0;
                 saveAfter = generateNumberOfEditsBeforeSave();

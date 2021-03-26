@@ -142,8 +142,8 @@ public class EditorView extends Div {
         Div buttonLayout = new Div();
         buttonLayout.addClassNames("border-t", "border-contrast-10",
                 "bg-contrast-5", "box-border", "flex", "flex-row", "h-xl",
-                "items-center", "px-m", "w-full", "flex-shrink-0",
-                "justify-end", "spacing-e-m");
+                "items-center", "p-s", "w-full", "flex-shrink-0", "justify-end",
+                "spacing-e-m", "h-xl");
         close.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         buttonLayout.add(close, save);
@@ -166,15 +166,16 @@ public class EditorView extends Div {
         avatarGroup.addClassNames("width-auto");
         Div headerLayout = new Div(header, avatarGroup);
         headerLayout.addClassNames("border-b", "border-l", "border-contrast-10",
-                "box-border", "flex", "flex-row", "h-xl", "items-center",
-                "px-m", "w-full", "flex-shrink-0");
+                "box-border", "flex", "flex-row", "items-center", "px-m",
+                "w-full", "flex-shrink-0", "h-xl");
 
         list = new CollaborationMessageList(localUser, null);
         list.addClassNames("border-l", "border-contrast-10", "flex-grow");
         input = new CollaborationMessageInput(localUser, null);
         input.addClassNames("border-t", "border-l", "border-contrast-10",
-                "bg-contrast-5", "box-border", "flex", "flex-row", "h-xl",
-                "items-center", "px-m", "w-full", "flex-shrink-0");
+                "bg-contrast-5", "box-border", "flex", "flex-row",
+                "items-center", "p-s", "w-full", "flex-shrink-0", "min-h-xl",
+                "items-end");
         Div layout = new Div(headerLayout, list, input);
         layout.addClassNames("flex", "flex-col", "flex-grow");
         list.setSizeFull();
@@ -196,8 +197,7 @@ public class EditorView extends Div {
         input.setTopic(topicId);
         System.out.println("Topic: " + topicId);
         if (topicId != null) {
-            BotRunner.onUserJoined(topicId, localUser, person.getId(),
-                    personService);
+            BotRunner.onUserJoined(topicId, localUser, person, personService);
         }
         connectToSaveNotifications(topicId);
     }

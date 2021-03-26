@@ -19,3 +19,7 @@
 .width-auto {
   width: auto;
 }
+
+.min-h-xl {
+  min-height: var(--lumo-size-xl);
+}
