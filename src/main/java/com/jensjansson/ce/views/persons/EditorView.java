@@ -157,7 +157,6 @@ public class EditorView extends Div {
     }
 
     private Div createComments() {
-
         H2 header = new H2("Chat");
         header.addClassNames("flex-grow", "m-0");
         avatarGroup = new CollaborationAvatarGroup(localUser, null);
@@ -168,7 +167,6 @@ public class EditorView extends Div {
         headerLayout.addClassNames("border-b", "border-l", "border-contrast-10",
                 "box-border", "flex", "flex-row", "items-center", "px-m",
                 "w-full", "flex-shrink-0", "h-xl");
-
         list = new CollaborationMessageList(localUser, null);
         list.addClassNames("border-l", "border-contrast-10", "flex-grow");
         input = new CollaborationMessageInput(localUser, null);
