@@ -78,7 +78,8 @@ public class PersonsView extends Div {
 
     private PersonService personService;
 
-    public PersonsView(@Autowired PersonService personService, MainView mainView) {
+    public PersonsView(@Autowired PersonService personService,
+            MainView mainView) {
         this.personService = personService;
         setId("persons-view");
         // Configure Grid
@@ -86,13 +87,13 @@ public class PersonsView extends Div {
         localUser.setName(mainView.getUserName());
         localUser.setImage(mainView.getUserAvatar());
 
-        avatarGroup = new CollaborationAvatarGroup(
-                localUser, null);
+        avatarGroup = new CollaborationAvatarGroup(localUser, null);
         avatarGroup.setMaxItemsVisible(4);
 
         grid = new Grid<>(Person.class);
         grid.setColumns("firstName", "lastName", "email");
-        CrudServiceDataProvider<Person, Void> dataProvider = new CrudServiceDataProvider<>(personService);
+        CrudServiceDataProvider<Person, Void> dataProvider = new CrudServiceDataProvider<>(
+                personService);
         grid.setDataProvider(dataProvider);
 
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
@@ -100,8 +101,8 @@ public class PersonsView extends Div {
 
         // when a row is selected or deselected, populate form
         grid.asSingleSelect().addValueChangeListener(event -> {
-                    populateForm(event.getValue());
-                }
+            populateForm(event.getValue());
+        }
 
         );
 
@@ -111,7 +112,8 @@ public class PersonsView extends Div {
         // Bind fields. This where you'd define e.g. validation rules
         binder.bindInstanceFields(this);
 
-        // note that password field isn't bound since that property doesn't exist in
+        // note that password field isn't bound since that property doesn't
+        // exist in
         // Person
 
         // the grid valueChangeEvent will clear the form too
@@ -127,12 +129,14 @@ public class PersonsView extends Div {
                 personService.update(person);
                 grid.getDataProvider().refreshAll();
                 if (refreshGridMap != null) {
-                    refreshGridMap.put("refreshGrid", UUID.randomUUID().toString());
+                    refreshGridMap.put("refreshGrid",
+                            UUID.randomUUID().toString());
                 }
                 sendSaveNotification();
             } catch (ValidationException validationException) {
                 validationException.printStackTrace();
-                Notification.show("An exception happened while trying to store the person details.");
+                Notification.show(
+                        "An exception happened while trying to store the person details.");
             }
         });
 
@@ -145,11 +149,13 @@ public class PersonsView extends Div {
 
         add(splitLayout);
 
-        CollaborationEngine.getInstance().openTopicConnection(this, "refreshGrid", localUser, topicConnection -> {
-            refreshGridMap = topicConnection.getNamedMap("refreshGrid");
-            refreshGridMap.subscribe(e -> grid.getDataProvider().refreshAll());
-            return () -> refreshGridMap = null;
-        });
+        CollaborationEngine.getInstance().openTopicConnection(this,
+                "refreshGrid", localUser, topicConnection -> {
+                    refreshGridMap = topicConnection.getNamedMap("refreshGrid");
+                    refreshGridMap.subscribe(
+                            e -> grid.getDataProvider().refreshAll());
+                    return () -> refreshGridMap = null;
+                });
 
         updateEditorLayoutVisibility();
 
@@ -201,7 +207,8 @@ public class PersonsView extends Div {
         wrapper.add(grid);
     }
 
-    private void addFormItem(Div wrapper, FormLayout formLayout, AbstractField field, String fieldName) {
+    private void addFormItem(Div wrapper, FormLayout formLayout,
+            AbstractField field, String fieldName) {
         formLayout.addFormItem(field, fieldName);
         wrapper.add(formLayout);
         field.getElement().getClassList().add("full-width");
@@ -220,7 +227,8 @@ public class PersonsView extends Div {
         password.setValue("");
 
         if (topicId != null) {
-            BotRunner.onUserJoined(topicId, localUser, value.getId(), personService);
+            BotRunner.onUserJoined(topicId, localUser, value.getId(),
+                    personService);
         }
         connectToSaveNotifications(topicId);
         updateEditorLayoutVisibility();
@@ -234,7 +242,8 @@ public class PersonsView extends Div {
         }
     }
 
-    public static void sendSaveNotification(CollaborationMap map, UserInfo user) {
+    public static void sendSaveNotification(CollaborationMap map,
+            UserInfo user) {
         ObjectMapper om = new ObjectMapper();
         ObjectNode objectNode = om.createObjectNode();
         objectNode.put("userName", user.getName());
@@ -254,32 +263,39 @@ public class PersonsView extends Div {
         }
         if (topicId != null) {
             topicConnectionRegistration = CollaborationEngine.getInstance()
-                    .openTopicConnection(this, topicId, localUser, topicConnection -> {
-                        saveMap = topicConnection.getNamedMap("save");
-                        saveMap.subscribe(e -> {
-                            if (e.getValue(Object.class) == null) {
-                                return;
-                            }
-                            ObjectMapper om = new ObjectMapper();
-                            try {
-                                JsonNode jsonNode = om.readTree(e.getValue(String.class));
-                                String savingUser = jsonNode.get("userName").asText();
-                                String savingUserId = jsonNode.get("userId").asText();
-                                if (Objects.equals(savingUserId, localUser.getId())) {
-                                    savingUser = "you";
-                                }
-                                showSaveNotification(savingUser);
-                            } catch (JsonProcessingException jsonProcessingException) {
-                                jsonProcessingException.printStackTrace();
-                            }
-                        });
-                        return null;
-                    });
+                    .openTopicConnection(this, topicId, localUser,
+                            topicConnection -> {
+                                saveMap = topicConnection.getNamedMap("save");
+                                saveMap.subscribe(e -> {
+                                    if (e.getValue(Object.class) == null) {
+                                        return;
+                                    }
+                                    ObjectMapper om = new ObjectMapper();
+                                    try {
+                                        JsonNode jsonNode = om.readTree(
+                                                e.getValue(String.class));
+                                        String savingUser = jsonNode
+                                                .get("userName").asText();
+                                        String savingUserId = jsonNode
+                                                .get("userId").asText();
+                                        if (Objects.equals(savingUserId,
+                                                localUser.getId())) {
+                                            savingUser = "you";
+                                        }
+                                        showSaveNotification(savingUser);
+                                    } catch (JsonProcessingException jsonProcessingException) {
+                                        jsonProcessingException
+                                                .printStackTrace();
+                                    }
+                                });
+                                return null;
+                            });
         }
     }
 
     private void showSaveNotification(String username) {
-        Notification notification = new Notification("Changes saved by " + username);
+        Notification notification = new Notification(
+                "Changes saved by " + username);
         notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
         notification.setDuration(5000);
         notification.open();

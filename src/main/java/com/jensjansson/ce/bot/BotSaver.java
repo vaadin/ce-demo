@@ -3,9 +3,7 @@ package com.jensjansson.ce.bot;
 import java.io.IOException;
 import java.util.UUID;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
@@ -18,14 +16,14 @@ import com.vaadin.collaborationengine.UserInfo;
 
 class BotSaver {
 
-    static void save(TopicConnection personTopic, Integer personId,
-            PersonService personService, UserInfo user) {
+    static void save(CollaborationEngine ce, TopicConnection personTopic,
+            Integer personId, PersonService personService, UserInfo user) {
         Person person = getPersonFromFields(personTopic);
         person.setId(personId);
         personService.update(person);
 
-        CollaborationEngine.getInstance().openTopicConnection(
-                new EagerConnectionContext(), "refreshGrid", user, topic -> {
+        ce.openTopicConnection(new EagerConnectionContext(), "refreshGrid",
+                user, topic -> {
                     topic.getNamedMap("refreshGrid").put("refreshGrid",
                             UUID.randomUUID().toString());
                     return null;
