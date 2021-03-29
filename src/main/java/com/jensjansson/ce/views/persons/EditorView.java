@@ -193,7 +193,6 @@ public class EditorView extends Div {
         avatarGroup.setTopic(topicId);
         list.setTopic(topicId);
         input.setTopic(topicId);
-        System.out.println("Topic: " + topicId);
         if (topicId != null) {
             BotRunner.onUserJoined(topicId, localUser, person, personService);
         }
