@@ -169,7 +169,7 @@ public class EditorView extends Div {
                 "w-full", "flex-shrink-0", "h-xl");
         list = new CollaborationMessageList(localUser, null);
         list.addClassNames("border-l", "border-contrast-10", "flex-grow");
-        input = new CollaborationMessageInput(localUser, null);
+        input = new CollaborationMessageInput(list);
         input.addClassNames("border-t", "border-l", "border-contrast-10",
                 "bg-contrast-5", "box-border", "flex", "flex-row",
                 "items-center", "p-s", "w-full", "flex-shrink-0", "min-h-xl",
@@ -192,7 +192,6 @@ public class EditorView extends Div {
         binder.setTopic(topicId, () -> person);
         avatarGroup.setTopic(topicId);
         list.setTopic(topicId);
-        input.setTopic(topicId);
         if (topicId != null) {
             BotRunner.onUserJoined(topicId, localUser, person, personService);
         }
