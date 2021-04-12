@@ -23,3 +23,17 @@
 .min-h-xl {
   min-height: var(--lumo-size-xl);
 }
+
+
+/* === EDITOR VIEW DIALOG === */
+
+@media (min-width: 1024px) {
+  
+  /* Display borders on 'desktop' */
+  .editor-view > header {
+    border-bottom: 1px solid var(--lumo-contrast-10pct);
+  }
+  .editor-view-details {
+    border-right: 1px solid var(--lumo-contrast-10pct);
+  }
+}

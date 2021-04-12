@@ -61,16 +61,18 @@ public class EmployeesView extends Div {
                         dialog.close();
                     }
                 });
+
         dialog = new Dialog(editorView);
-        dialog.setWidth("80%");
-        dialog.setHeight("80%");
+        dialog.addThemeName("editor-view-dialog");
+        dialog.addThemeVariants(DialogVariant.LUMO_NO_PADDING);
+
         dialog.addDialogCloseActionListener(event -> {
             editorView.editPerson(null);
             dialog.close();
         });
+
         dialog.setCloseOnEsc(true);
         dialog.setCloseOnOutsideClick(true);
-        dialog.addThemeVariants(DialogVariant.LUMO_NO_PADDING);
 
         grid = new Grid<>();
         grid.removeAllColumns();
