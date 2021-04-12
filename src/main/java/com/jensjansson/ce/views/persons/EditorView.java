@@ -26,6 +26,7 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
@@ -51,10 +52,12 @@ public class EditorView extends Div {
 
     private Button close = new Button("Close");
     private Button save = new Button("Save");
+    Button closeCross = new Button();
 
     private CollaborationAvatarGroup avatarGroup;
     private UserInfo localUser;
     private PersonService personService;
+    private SaveNotifier saveNotifier;
     private CollaborationBinder<Person> binder;
 
     private Person person;
@@ -66,9 +69,11 @@ public class EditorView extends Div {
             SaveNotifier saveNotifier) {
         this.localUser = localUser;
         this.personService = personService;
+        this.saveNotifier = saveNotifier;
 
         // the grid valueChangeEvent will clear the form too
         close.addClickListener(e -> saveNotifier.stopEditingPerson());
+        closeCross.addClickListener(e -> saveNotifier.stopEditingPerson());
 
         save.addClickListener(e -> {
             try {
@@ -86,21 +91,39 @@ public class EditorView extends Div {
             }
         });
 
+        Div header = createHeader();
         Div form = createForm();
         Div comments = createComments();
-        add(form, comments);
-        addClassNames("flex", "flex-row");
+        Div horizontal = new Div(form, comments);
+        horizontal.addClassNames("flex", "flex-row", "flex-auto");
+        horizontal.setSizeFull();
+
+        add(header, horizontal);
+        addClassNames("flex", "flex-col");
         setSizeFull();
     }
 
-    private Div createForm() {
+    private Div createHeader() {
         H2 header = new H2("Edit person");
-        header.addClassNames("m-0");
-        Div headerLayout = new Div(header);
-        headerLayout.addClassNames("border-b", "border-contrast-10",
-                "box-border", "flex", "flex-row", "h-xl", "px-m",
-                "items-center", "w-full", "flex-shrink-0");
+        header.addClassNames("flex-grow", "m-0");
 
+        avatarGroup = new CollaborationAvatarGroup(localUser, null);
+        avatarGroup.setMaxItemsVisible(4);
+        avatarGroup.setWidth(null);
+        avatarGroup.addClassNames("width-auto");
+        closeCross.setIcon(VaadinIcon.CLOSE.create());
+        closeCross.addThemeVariants(ButtonVariant.LUMO_ICON,
+                ButtonVariant.LUMO_TERTIARY);
+        closeCross.addClassNames("text-secondary", "text-xs");
+
+        Div headerLayout = new Div(header, avatarGroup, closeCross);
+        headerLayout.addClassNames("border-b", "border-contrast-10",
+                "box-border", "flex", "flex-row", "items-center", "px-m",
+                "w-full", "flex-shrink-0", "h-xl");
+        return headerLayout;
+    }
+
+    private Div createForm() {
         H3 personalHeader = new H3("Personal information");
         TextField firstName = new TextField("First name");
         TextField lastName = new TextField("Last name");
@@ -136,8 +159,8 @@ public class EditorView extends Div {
         Div formLayout = new Div();
         formLayout.add(personalHeader, firstName, lastName, email, phoneNumber,
                 employmentHeader, title, department, team, happiness);
-        formLayout.addClassNames("flex", "flex-col", "flex-grow", "flex-shrink",
-                "p-m", "overflow-auto");
+        formLayout.addClassNames("flex", "flex-col", "flex-auto", "p-m",
+                "overflow-auto");
 
         Div buttonLayout = new Div();
         buttonLayout.addClassNames("border-t", "border-contrast-10",
@@ -148,25 +171,15 @@ public class EditorView extends Div {
         save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         buttonLayout.add(close, save);
 
-        Div layout = new Div(headerLayout, formLayout, buttonLayout);
+        Div layout = new Div(formLayout, buttonLayout);
 
-        layout.addClassNames("flex", "flex-col", "flex-grow");
+        layout.addClassNames("flex", "flex-col", "flex-auto");
         layout.setSizeFull();
         return layout;
 
     }
 
     private Div createComments() {
-        H2 header = new H2("Chat");
-        header.addClassNames("flex-grow", "m-0");
-        avatarGroup = new CollaborationAvatarGroup(localUser, null);
-        avatarGroup.setMaxItemsVisible(4);
-        avatarGroup.setWidth(null);
-        avatarGroup.addClassNames("width-auto");
-        Div headerLayout = new Div(header, avatarGroup);
-        headerLayout.addClassNames("border-b", "border-l", "border-contrast-10",
-                "box-border", "flex", "flex-row", "items-center", "px-m",
-                "w-full", "flex-shrink-0", "h-xl");
         list = new CollaborationMessageList(localUser, null);
         list.addClassNames("border-l", "border-contrast-10", "flex-grow");
         input = new CollaborationMessageInput(list);
@@ -174,7 +187,7 @@ public class EditorView extends Div {
                 "bg-contrast-5", "box-border", "flex", "flex-row",
                 "items-center", "p-s", "w-full", "flex-shrink-0", "min-h-xl",
                 "items-end");
-        Div layout = new Div(headerLayout, list, input);
+        Div layout = new Div(list, input);
         layout.addClassNames("flex", "flex-col", "flex-grow");
         list.setSizeFull();
         input.setWidthFull();
