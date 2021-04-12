@@ -5,6 +5,7 @@ import java.util.UUID;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
 import com.jensjansson.ce.views.main.MainView;
+import com.vaadin.flow.component.avatar.AvatarVariant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 
@@ -110,14 +111,17 @@ public class EmployeesView extends Div {
     }
 
     private Component createAvatar(Person person) {
-        return new Avatar(person.getFirstName() + " " + person.getLastName(),
+        Avatar avatar = new Avatar(person.getFirstName() + " " + person.getLastName(),
                 person.getAvatar());
+        avatar.addClassName("mt-xs");
+        avatar.addThemeVariants(AvatarVariant.LUMO_LARGE);
+        return avatar;
     }
 
     private Component createOwnerInfo(Person person) {
         Span name = new Span(
                 new Text(person.getFirstName() + " " + person.getLastName()));
-        name.addClassNames("font-semibold");
+        name.addClassNames("font-semibold text-l");
         Span title = new Span(
                 new Text(person.getTitle() != null ? person.getTitle() : ""));
         title.addClassNames("text-s", "text-secondary");
