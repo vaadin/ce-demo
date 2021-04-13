@@ -197,7 +197,7 @@ public class EditorView extends Div {
         Div content = new Div();
         content.add(personalHeader, firstName, lastName, email, phoneNumber,
                 employmentHeader, title, department, team, happiness);
-        content.addClassNames("flex", "flex-col", "pb-m", "px-m",
+        content.addClassNames("flex", "flex-col", "flex-auto", "pb-m", "px-m",
                 "overflow-auto");
 
         /* Footer */
