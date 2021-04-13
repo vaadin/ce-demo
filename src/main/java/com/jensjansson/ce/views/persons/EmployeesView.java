@@ -23,6 +23,8 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -45,7 +47,7 @@ public class EmployeesView extends Div {
         setSizeFull();
 
         editorView = new EditorView(mainView.getLocalUser(), personService,
-                new EditorView.SaveNotifier() {
+                new EditorView.EditorActionNotifier() {
                     @Override
                     public void updateGrid(Person person) {
                         grid.getDataProvider().refreshAll();
@@ -59,6 +61,18 @@ public class EmployeesView extends Div {
                     @Override
                     public void stopEditingPerson() {
                         dialog.close();
+                    }
+
+                    @Override
+                    public void deletePerson() {
+                        dialog.close();
+                        Notification notification = new Notification(
+                                "Delete has been disabled for demo purposes. "
+                                        + "Otherwise we would not have any items left.");
+                        notification.addThemeVariants(
+                                NotificationVariant.LUMO_SUCCESS);
+                        notification.setDuration(5000);
+                        notification.open();
                     }
                 });
 

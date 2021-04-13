@@ -20,15 +20,18 @@ import com.vaadin.collaborationengine.CollaborationMap;
 import com.vaadin.collaborationengine.CollaborationMessageInput;
 import com.vaadin.collaborationengine.CollaborationMessageList;
 import com.vaadin.collaborationengine.UserInfo;
-import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Footer;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Header;
+import com.vaadin.flow.component.html.Section;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
-import com.vaadin.flow.component.page.Page;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
 import com.vaadin.flow.component.tabs.Tab;
@@ -40,9 +43,12 @@ import com.vaadin.flow.shared.Registration;
 
 public class EditorView extends Div {
 
-    public interface SaveNotifier {
+    public interface EditorActionNotifier {
         public void updateGrid(Person person);
+
         public void stopEditingPerson();
+
+        public void deletePerson();
     }
 
     public static final List<String> HAPPINESS_VALUES = Arrays.asList(
@@ -63,7 +69,7 @@ public class EditorView extends Div {
     private CollaborationAvatarGroup avatarGroup;
     private UserInfo localUser;
     private PersonService personService;
-    private SaveNotifier saveNotifier;
+    private EditorActionNotifier editorActionNotifier;
     private CollaborationBinder<Person> binder;
 
     private Person person;
@@ -72,25 +78,25 @@ public class EditorView extends Div {
     private Registration topicConnectionRegistration;
 
     public EditorView(UserInfo localUser, PersonService personService,
-            SaveNotifier saveNotifier) {
+            EditorActionNotifier editorActionNotifier) {
         this.localUser = localUser;
         this.personService = personService;
-        this.saveNotifier = saveNotifier;
+        this.editorActionNotifier = editorActionNotifier;
 
         addClassNames("editor-view", "flex", "flex-col");
         setHeightFull();
 
         // the grid valueChangeEvent will clear the form too
-        close.addClickListener(e -> saveNotifier.stopEditingPerson());
-        delete.addClickListener(e -> {});
-        cancel.addClickListener(e -> {});
+        close.addClickListener(e -> editorActionNotifier.stopEditingPerson());
+        delete.addClickListener(e -> editorActionNotifier.deletePerson());
+        cancel.addClickListener(e -> editorActionNotifier.stopEditingPerson());
         save.addClickListener(e -> {
             try {
                 binder.writeBean(person);
                 if (this.person != null) {
                     person.setId(this.person.getId());
                 }
-                saveNotifier.updateGrid(person);
+                editorActionNotifier.updateGrid(person);
                 personService.update(person);
                 sendSaveNotification();
             } catch (ValidationException validationException) {
@@ -195,7 +201,8 @@ public class EditorView extends Div {
                 "overflow-auto");
 
         /* Footer */
-        delete.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+        delete.addThemeVariants(ButtonVariant.LUMO_TERTIARY,
+                ButtonVariant.LUMO_ERROR);
         delete.addClassName("mr-auto");
 
         cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
@@ -208,7 +215,8 @@ public class EditorView extends Div {
         footer.add(delete, cancel, save);
 
         Section details = new Section(content, footer);
-        details.addClassNames("editor-view-details", "lg:flex", "flex-col", "flex-grow", "hidden", "flex");
+        details.addClassNames("editor-view-details", "lg:flex", "flex-col",
+                "flex-grow", "hidden", "flex");
         details.setWidth("50%");
         return details;
     }
@@ -223,7 +231,8 @@ public class EditorView extends Div {
         input.setSizeUndefined();
 
         Section comments = new Section(list, input);
-        comments.addClassNames("editor-view-comments", "lg:flex", "flex-col", "flex-grow", "hidden");
+        comments.addClassNames("editor-view-comments", "lg:flex", "flex-col",
+                "flex-grow", "hidden");
         comments.setWidth("50%");
         return comments;
     }
