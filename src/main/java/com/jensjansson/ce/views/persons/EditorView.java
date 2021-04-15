@@ -200,7 +200,7 @@ public class EditorView extends Div {
                         topicConnection
                                 .getNamedList(CollaborationMessageList.class
                                         .getName())
-                                .setExpirationTimeout(Duration.ofMinutes(1));
+                                .setExpirationTimeout(Duration.ofMinutes(15));
                         return null;
                     });
         }
