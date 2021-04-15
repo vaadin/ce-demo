@@ -6,8 +6,6 @@
   height: 100%;
   max-width: 400px;
   width: 100%;
-  /* Temporary fix https://github.com/vaadin/collaboration-engine-internal/pull/548 */
-  z-index: -1;
 }
 
 @media (min-width: 1024px) {
