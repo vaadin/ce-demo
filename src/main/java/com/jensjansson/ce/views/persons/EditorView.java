@@ -1,5 +1,6 @@
 package com.jensjansson.ce.views.persons;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -194,6 +195,14 @@ public class EditorView extends Div {
         list.setTopic(topicId);
         if (topicId != null) {
             BotRunner.onUserJoined(topicId, localUser, person, personService);
+            CollaborationEngine.getInstance().openTopicConnection(this, topicId,
+                    localUser, topicConnection -> {
+                        topicConnection
+                                .getNamedList(CollaborationMessageList.class
+                                        .getName())
+                                .setExpirationTimeout(Duration.ofMinutes(1));
+                        return null;
+                    });
         }
         connectToSaveNotifications(topicId);
     }
