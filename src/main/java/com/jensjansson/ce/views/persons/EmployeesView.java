@@ -5,7 +5,6 @@ import java.util.UUID;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
 import com.jensjansson.ce.views.main.MainView;
-import com.vaadin.flow.component.avatar.AvatarVariant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 
@@ -14,6 +13,7 @@ import com.vaadin.collaborationengine.CollaborationMap;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.component.avatar.AvatarVariant;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -111,7 +111,8 @@ public class EmployeesView extends Div {
     }
 
     private Component createAvatar(Person person) {
-        Avatar avatar = new Avatar(person.getFirstName() + " " + person.getLastName(),
+        Avatar avatar = new Avatar(
+                person.getFirstName() + " " + person.getLastName(),
                 person.getAvatar());
         avatar.addClassName("mt-xs");
         avatar.addThemeVariants(AvatarVariant.LUMO_LARGE);

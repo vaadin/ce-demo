@@ -12,15 +12,17 @@ import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarVariant;
-import com.vaadin.flow.component.html.*;
+import com.vaadin.flow.component.html.Footer;
+import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Header;
+import com.vaadin.flow.component.html.Nav;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.spring.annotation.UIScope;
-
-import static com.vaadin.flow.component.applayout.AppLayout.Section.DRAWER;
 
 @org.springframework.stereotype.Component
 @UIScope
@@ -38,7 +40,7 @@ public class MainView extends AppLayout {
         localUser.setImage("images/avatars/"
                 + ThreadLocalRandom.current().nextInt(1, 8 + 1) + ".png");
 
-        setPrimarySection(DRAWER);
+        setPrimarySection(Section.DRAWER);
         addToNavbar(true, createHeaderContent());
         addToDrawer(createSideMenu());
     }
@@ -66,8 +68,10 @@ public class MainView extends AppLayout {
         menu = createMenuLinks();
         Footer footer = createMenuFooter();
 
-        com.vaadin.flow.component.html.Section section = new com.vaadin.flow.component.html.Section(header, menu, footer);
-        section.addClassNames("bg-base", "flex", "flex-col", "items-stretch", "min-h-full");
+        com.vaadin.flow.component.html.Section section = new com.vaadin.flow.component.html.Section(
+                header, menu, footer);
+        section.addClassNames("bg-base", "flex", "flex-col", "items-stretch",
+                "min-h-full");
         return section;
     }
 
@@ -75,10 +79,8 @@ public class MainView extends AppLayout {
         Nav menu = new Nav();
         menu.addClassNames("mb-l");
 
-        menu.add(
-                createLink(VaadinIcon.EDIT, "Employees", EmployeesView.class),
-                createLink(VaadinIcon.PICTURE, "About", AboutView.class)
-        );
+        menu.add(createLink(VaadinIcon.EDIT, "Employees", EmployeesView.class),
+                createLink(VaadinIcon.PICTURE, "About", AboutView.class));
 
         return menu;
     }
@@ -94,7 +96,8 @@ public class MainView extends AppLayout {
         span.addClassNames("text-s", "font-medium");
 
         link.add(icon, span);
-        link.addClassNames("flex", "h-m", "items-center", "mx-s", "px-s", "relative", "text-secondary");
+        link.addClassNames("flex", "h-m", "items-center", "mx-s", "px-s",
+                "relative", "text-secondary");
         return link;
     }
 
