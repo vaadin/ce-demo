@@ -23,6 +23,8 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -45,7 +47,7 @@ public class EmployeesView extends Div {
         setSizeFull();
 
         editorView = new EditorView(mainView.getLocalUser(), personService,
-                new EditorView.SaveNotifier() {
+                new EditorView.EditorActionNotifier() {
                     @Override
                     public void updateGrid(Person person) {
                         grid.getDataProvider().refreshAll();
@@ -60,17 +62,30 @@ public class EmployeesView extends Div {
                     public void stopEditingPerson() {
                         dialog.close();
                     }
+
+                    @Override
+                    public void deletePerson() {
+                        dialog.close();
+                        Notification notification = new Notification(
+                                "Delete has been disabled for demo purposes.");
+                        notification.addThemeVariants(
+                                NotificationVariant.LUMO_SUCCESS);
+                        notification.setDuration(5000);
+                        notification.open();
+                    }
                 });
+
         dialog = new Dialog(editorView);
-        dialog.setWidth("80%");
-        dialog.setHeight("80%");
+        dialog.addThemeName("editor-view-dialog");
+        dialog.addThemeVariants(DialogVariant.LUMO_NO_PADDING);
+
         dialog.addDialogCloseActionListener(event -> {
             editorView.editPerson(null);
             dialog.close();
         });
+
         dialog.setCloseOnEsc(true);
         dialog.setCloseOnOutsideClick(true);
-        dialog.addThemeVariants(DialogVariant.LUMO_NO_PADDING);
 
         grid = new Grid<>();
         grid.removeAllColumns();

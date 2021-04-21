@@ -25,12 +25,18 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Footer;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Header;
+import com.vaadin.flow.component.html.Section;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
+import com.vaadin.flow.component.tabs.Tab;
+import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -38,24 +44,33 @@ import com.vaadin.flow.shared.Registration;
 
 public class EditorView extends Div {
 
-    public interface SaveNotifier {
+    public interface EditorActionNotifier {
         public void updateGrid(Person person);
 
         public void stopEditingPerson();
+
+        public void deletePerson();
     }
 
     public static final List<String> HAPPINESS_VALUES = Arrays.asList(
             "Raptorous", "Ecstatic", "Joyful", "Indifferent", "Dreadful");
 
+    private Tabs tabs;
+    private Section details;
+    private Section comments;
+
     CollaborationMessageList list;
     CollaborationMessageInput input;
 
-    private Button close = new Button("Close");
+    private Button close = new Button();
+    private Button delete = new Button("Delete...");
+    private Button cancel = new Button("Cancel");
     private Button save = new Button("Save");
 
     private CollaborationAvatarGroup avatarGroup;
     private UserInfo localUser;
     private PersonService personService;
+    private EditorActionNotifier editorActionNotifier;
     private CollaborationBinder<Person> binder;
 
     private Person person;
@@ -64,20 +79,25 @@ public class EditorView extends Div {
     private Registration topicConnectionRegistration;
 
     public EditorView(UserInfo localUser, PersonService personService,
-            SaveNotifier saveNotifier) {
+            EditorActionNotifier editorActionNotifier) {
         this.localUser = localUser;
         this.personService = personService;
+        this.editorActionNotifier = editorActionNotifier;
+
+        addClassNames("editor-view", "flex", "flex-col");
+        setHeightFull();
 
         // the grid valueChangeEvent will clear the form too
-        close.addClickListener(e -> saveNotifier.stopEditingPerson());
-
+        close.addClickListener(e -> editorActionNotifier.stopEditingPerson());
+        delete.addClickListener(e -> editorActionNotifier.deletePerson());
+        cancel.addClickListener(e -> editorActionNotifier.stopEditingPerson());
         save.addClickListener(e -> {
             try {
                 binder.writeBean(person);
                 if (this.person != null) {
                     person.setId(this.person.getId());
                 }
-                saveNotifier.updateGrid(person);
+                editorActionNotifier.updateGrid(person);
                 personService.update(person);
                 sendSaveNotification();
             } catch (ValidationException validationException) {
@@ -87,39 +107,80 @@ public class EditorView extends Div {
             }
         });
 
-        Div form = createForm();
-        Div comments = createComments();
-        add(form, comments);
-        addClassNames("flex", "flex-row");
-        setSizeFull();
+        Header header = createHeader();
+        details = createDetails();
+        comments = createComments();
+        Div content = new Div(details, comments);
+        content.addClassNames("flex", "flex-grow", "overflow-auto");
+        add(header, content);
     }
 
-    private Div createForm() {
-        H2 header = new H2("Edit person");
-        header.addClassNames("m-0");
-        Div headerLayout = new Div(header);
-        headerLayout.addClassNames("border-b", "border-contrast-10",
-                "box-border", "flex", "flex-row", "h-xl", "px-m",
-                "items-center", "w-full", "flex-shrink-0");
+    private Header createHeader() {
+        H2 heading = new H2("Edit employee");
+        heading.addClassNames("text-xl", "lg:text-2xl", "my-0", "mr-auto");
 
+        avatarGroup = new CollaborationAvatarGroup(localUser, null);
+        avatarGroup.addClassName("mx-m");
+        avatarGroup.setMaxItemsVisible(4);
+        avatarGroup.setWidth("auto");
+
+        close.addClassNames("text-secondary");
+        close.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        close.setIcon(VaadinIcon.CLOSE_SMALL.create());
+
+        Tab detailsTab = new Tab("Details");
+        Tab commentsTab = new Tab("Comments");
+        tabs = new Tabs(detailsTab, commentsTab);
+        tabs.addClassNames("editor-view-tabs", "lg:hidden");
+        tabs.addSelectedChangeListener(e -> {
+            if (e.getSelectedTab().equals(detailsTab)) {
+                details.addClassName("flex");
+                comments.removeClassName("flex");
+            } else {
+                details.removeClassName("flex");
+                comments.addClassName("flex");
+            }
+        });
+
+        Div div = new Div(heading, avatarGroup, close);
+        div.addClassNames("flex", "items-center", "p-l");
+
+        Header header = new Header(div, tabs);
+        header.addClassNames("flex", "flex-col");
+        return header;
+    }
+
+    private Section createDetails() {
+        /* Personal info */
         H3 personalHeader = new H3("Personal information");
+        personalHeader.addClassNames("text-l", "lg:text-xl");
+
         TextField firstName = new TextField("First name");
         TextField lastName = new TextField("Last name");
+
+        TextField email = new TextField("Email");
+        email.setValueChangeMode(ValueChangeMode.EAGER);
+
+        TextField phoneNumber = new TextField("Phone number");
+
+        /* Employment info */
+        H3 employmentHeader = new H3("Employment information");
+        employmentHeader.addClassNames("text-l", "lg:text-xl");
+
+        TextField title = new TextField("Title");
+
+        ComboBox<String> department = new ComboBox<>("Department");
+        department.setItems("Engineering", "Product", "Marketing",
+                "Customer Success", "Operations", "Sales");
+
+        ComboBox<String> team = new ComboBox<>("Team");
+        team.setItems("Core products", "Added value", "Support", "Design");
+
         RadioButtonGroup<String> happiness = new RadioButtonGroup<>();
         happiness.setLabel("How excited are they?");
         happiness.setItems(HAPPINESS_VALUES);
         happiness.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
         happiness.setValue("Raptorous");
-        TextField email = new TextField("Email");
-        email.setValueChangeMode(ValueChangeMode.EAGER);
-        TextField phoneNumber = new TextField("Phone number");
-        H3 employmentHeader = new H3("Employment information");
-        TextField title = new TextField("Title");
-        ComboBox<String> department = new ComboBox<>("Department");
-        department.setItems("Engineering", "Product", "Marketing",
-                "Customer Success", "Operations", "Sales");
-        ComboBox<String> team = new ComboBox<>("Team");
-        team.setItems("Core products", "Added value", "Support", "Design");
 
         // Configure Form
         binder = new CollaborationBinder<>(Person.class, localUser);
@@ -134,53 +195,47 @@ public class EditorView extends Div {
         // Bind fields. This where you'd define e.g. validation rules
         binder.bindInstanceFields(this);
 
-        Div formLayout = new Div();
-        formLayout.add(personalHeader, firstName, lastName, email, phoneNumber,
+        Div content = new Div();
+        content.add(personalHeader, firstName, lastName, email, phoneNumber,
                 employmentHeader, title, department, team, happiness);
-        formLayout.addClassNames("flex", "flex-col", "flex-grow", "flex-shrink",
-                "p-m", "overflow-auto");
+        content.addClassNames("flex", "flex-col", "flex-auto", "pb-m", "px-m",
+                "overflow-auto");
 
-        Div buttonLayout = new Div();
-        buttonLayout.addClassNames("border-t", "border-contrast-10",
-                "bg-contrast-5", "box-border", "flex", "flex-row", "h-xl",
-                "items-center", "p-s", "w-full", "flex-shrink-0", "justify-end",
-                "spacing-e-m", "h-xl");
-        close.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        /* Footer */
+        delete.addThemeVariants(ButtonVariant.LUMO_TERTIARY,
+                ButtonVariant.LUMO_ERROR);
+        delete.addClassName("mr-auto");
+
+        cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        cancel.addClassName("mx-m");
+
         save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        buttonLayout.add(close, save);
 
-        Div layout = new Div(headerLayout, formLayout, buttonLayout);
+        Footer footer = new Footer(delete, cancel, save);
+        footer.addClassNames("bg-contrast-5", "flex", "px-m", "py-s");
+        footer.add(delete, cancel, save);
 
-        layout.addClassNames("flex", "flex-col", "flex-grow");
-        layout.setSizeFull();
-        return layout;
-
+        Section details = new Section(content, footer);
+        details.addClassNames("editor-view-details", "lg:flex", "flex-col",
+                "flex-grow", "hidden", "flex");
+        details.setWidth("50%");
+        return details;
     }
 
-    private Div createComments() {
-        H2 header = new H2("Chat");
-        header.addClassNames("flex-grow", "m-0");
-        avatarGroup = new CollaborationAvatarGroup(localUser, null);
-        avatarGroup.setMaxItemsVisible(4);
-        avatarGroup.setWidth(null);
-        avatarGroup.addClassNames("width-auto");
-        Div headerLayout = new Div(header, avatarGroup);
-        headerLayout.addClassNames("border-b", "border-l", "border-contrast-10",
-                "box-border", "flex", "flex-row", "items-center", "px-m",
-                "w-full", "flex-shrink-0", "h-xl");
+    private Section createComments() {
         list = new CollaborationMessageList(localUser, null);
-        list.addClassNames("border-l", "border-contrast-10", "flex-grow");
+        list.addClassNames("flex-grow");
+        list.setSizeUndefined();
+
         input = new CollaborationMessageInput(list);
-        input.addClassNames("border-t", "border-l", "border-contrast-10",
-                "bg-contrast-5", "box-border", "flex", "flex-row",
-                "items-center", "p-s", "w-full", "flex-shrink-0", "min-h-xl",
-                "items-end");
-        Div layout = new Div(headerLayout, list, input);
-        layout.addClassNames("flex", "flex-col", "flex-grow");
-        list.setSizeFull();
-        input.setWidthFull();
-        layout.setSizeFull();
-        return layout;
+        input.addClassNames("bg-contrast-5");
+        input.setSizeUndefined();
+
+        Section comments = new Section(list, input);
+        comments.addClassNames("editor-view-comments", "lg:flex", "flex-col",
+                "flex-grow", "hidden");
+        comments.setWidth("50%");
+        return comments;
     }
 
     protected void editPerson(Person person) {

@@ -1,7 +1,17 @@
 :host([theme~="no-padding"]) [part="content"] {
   padding: 0;
 }
-/* TODO: TEMPORARY FIX UNTIL https://github.com/vaadin/collaboration-engine-internal/pull/548 IS MERGED AND RELEASED */
-[part="overlay"] {
-  z-index: -1;
+
+:host([theme~="editor-view-dialog"]) [part="overlay"] {
+  height: 100%;
+  max-width: 400px;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  :host([theme~="editor-view-dialog"]) [part="overlay"] {
+    height: auto;
+    max-width: none;
+    width: 800px;
+  }
 }
