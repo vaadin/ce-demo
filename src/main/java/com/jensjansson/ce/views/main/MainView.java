@@ -5,6 +5,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import com.jensjansson.ce.views.about.AboutView;
 import com.jensjansson.ce.views.persons.EmployeesView;
+import com.jensjansson.ce.views.yourprofile.YourProfileView;
 
 import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.component.Component;
@@ -103,14 +104,18 @@ public class MainView extends AppLayout {
 
     private Footer createMenuFooter() {
         avatar = new Avatar(localUser.getName(), localUser.getImage());
-        avatar.addClassNames("mr-xs");
+        avatar.addClassNames("mr-xs pointer");
         avatar.addThemeVariants(AvatarVariant.LUMO_XSMALL);
 
         userLabel = new Span(localUser.getName());
         userLabel.addClassNames("font-medium", "text-s", "text-secondary");
 
         Footer footer = new Footer(avatar, userLabel);
-        footer.addClassNames("flex", "items-center", "mb-m", "mt-auto", "px-m");
+        footer.addClassNames("flex", "items-center", "mb-m", "mt-auto", "px-m",
+                "pointer");
+        footer.addClickListener(event -> {
+            footer.getUI().ifPresent(ui -> ui.navigate(YourProfileView.class));
+        });
         return footer;
     }
 
