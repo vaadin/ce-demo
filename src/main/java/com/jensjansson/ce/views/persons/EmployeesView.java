@@ -67,8 +67,7 @@ public class EmployeesView extends Div {
                     public void deletePerson() {
                         dialog.close();
                         Notification notification = new Notification(
-                                "Delete has been disabled for demo purposes. "
-                                        + "Otherwise we would not have any items left.");
+                                "Delete has been disabled for demo purposes.");
                         notification.addThemeVariants(
                                 NotificationVariant.LUMO_SUCCESS);
                         notification.setDuration(5000);
