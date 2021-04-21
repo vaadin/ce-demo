@@ -1,5 +1,6 @@
 package com.jensjansson.ce.views.persons;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -19,6 +20,7 @@ import com.vaadin.collaborationengine.CollaborationEngine;
 import com.vaadin.collaborationengine.CollaborationMap;
 import com.vaadin.collaborationengine.CollaborationMessageInput;
 import com.vaadin.collaborationengine.CollaborationMessageList;
+import com.vaadin.collaborationengine.TopicConnectionRegistration;
 import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -76,6 +78,7 @@ public class EditorView extends Div {
 
     private CollaborationMap saveMap;
     private Registration topicConnectionRegistration;
+    private TopicConnectionRegistration expirationRegistration;
 
     public EditorView(UserInfo localUser, PersonService personService,
             EditorActionNotifier editorActionNotifier) {
@@ -247,8 +250,22 @@ public class EditorView extends Div {
         binder.setTopic(topicId, () -> person);
         avatarGroup.setTopic(topicId);
         list.setTopic(topicId);
+        if (expirationRegistration != null) {
+            expirationRegistration.remove();
+        }
         if (topicId != null) {
             BotRunner.onUserJoined(topicId, localUser, person, personService);
+            expirationRegistration = CollaborationEngine.getInstance()
+                    .openTopicConnection(this, topicId, localUser,
+                            topicConnection -> {
+                                topicConnection
+                                        .getNamedList(
+                                                CollaborationMessageList.class
+                                                        .getName())
+                                        .setExpirationTimeout(
+                                                Duration.ofMinutes(15));
+                                return null;
+                            });
         }
         connectToSaveNotifications(topicId);
     }
