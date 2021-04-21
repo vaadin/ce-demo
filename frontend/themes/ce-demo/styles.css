@@ -24,11 +24,34 @@
   min-height: var(--lumo-size-xl);
 }
 
+/* === DRAWER === */
+
+[slot="drawer"] {
+  background-image: linear-gradient(0deg, var(--lumo-contrast-5pct), var(--lumo-contrast-5pct));
+}
+
+[slot="drawer"] a[highlight] {
+  color: var(--lumo-primary-text-color);
+}
+
+[slot="drawer"] a[highlight]::before {
+  background-color: var(--lumo-primary-color-10pct);
+  border-radius: var(--lumo-border-radius);
+  bottom: calc(var(--lumo-space-xs) * 0.5);
+  content: "";
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: calc(var(--lumo-space-xs) * 0.5);
+}
+
+[slot="drawer"] nav a iron-icon {
+  padding: calc(var(--lumo-space-xs) * 0.5);
+}
 
 /* === EDITOR VIEW DIALOG === */
 
 @media (min-width: 1024px) {
-  
   /* Display borders on 'desktop' */
   .editor-view > header {
     border-bottom: 1px solid var(--lumo-contrast-10pct);
