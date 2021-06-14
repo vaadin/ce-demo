@@ -1,5 +1,6 @@
 package com.jensjansson.ce.bot;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -35,6 +36,7 @@ class BotAvatarUtil {
             SerializableFunction<Stream<UserInfo>, Stream<UserInfo>> updater) {
         CollaborationMap map = getMap(topic);
         List<UserInfo> oldUsers = map.get(MAP_KEY, LIST_USER_INFO_TYPE_REF);
+        oldUsers = oldUsers != null ? oldUsers : Collections.emptyList();
         List<UserInfo> newUsers = updater.apply(oldUsers.stream())
                 .collect(Collectors.toList());
         map.replace(MAP_KEY, oldUsers, newUsers).thenAccept(success -> {
