@@ -240,13 +240,9 @@ public class EditorView extends Div {
         return comments;
     }
 
-    protected void editPerson(Person person) {
+    protected void editPerson(Person person, String topicId) {
         this.person = person;
-        // Value can be null as well, that clears the form
-        String topicId = null;
-        if (person != null && person.getId() != null) {
-            topicId = "person/" + String.valueOf(person.getId());
-        }
+        //  A null topicId clears the form
         binder.setTopic(topicId, () -> person);
         avatarGroup.setTopic(topicId);
         list.setTopic(topicId);
