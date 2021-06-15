@@ -104,7 +104,8 @@ public class EmployeesView extends Div {
                 .setFlexGrow(1);
         grid.addColumn(new ComponentRenderer<>(this::createContactInfo))
                 .setFlexGrow(2);
-        grid.addColumn(new ComponentRenderer<>(this::createPresentComponent)).setFlexGrow(1);
+        grid.addColumn(new ComponentRenderer<>(PresenceComponent::new))
+                .setFlexGrow(1);
         grid.addColumn(new ComponentRenderer<>(this::createEditButton))
                 .setWidth("5em").setFlexGrow(0)
                 .setTextAlign(ColumnTextAlign.END);
@@ -179,11 +180,8 @@ public class EmployeesView extends Div {
         return layout;
     }
 
-    private Component createPresentComponent(Person person) {
-        return new PresenceComponent(person);
-    }
-
     class PresenceComponent extends AvatarGroup {
+
         public PresenceComponent(Person person) {
             Objects.requireNonNull(person);
             PresenceAdapter presenceAdapter = new PresenceAdapter(this,
@@ -191,7 +189,8 @@ public class EmployeesView extends Div {
             presenceAdapter.setAutoPresence(false);
 
             presenceAdapter.setNewUserHandler(e -> {
-                String description = String.format("%s is editing this row", e.getName());
+                String description = String
+                    .format("%s is editing this row", e.getName());
                 AvatarGroupItem item = new AvatarGroupItem(description,
                     e.getImage());
                 item.setColorIndex(
