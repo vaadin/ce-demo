@@ -104,8 +104,8 @@ public class EmployeesView extends Div {
                 .setFlexGrow(1);
         grid.addColumn(new ComponentRenderer<>(this::createContactInfo))
                 .setFlexGrow(2);
-        grid.addColumn(new ComponentRenderer<>(PresenceComponent::new))
-                .setFlexGrow(1);
+        grid.addColumn(new ComponentRenderer<>(this::createPresenceComponent))
+            .setFlexGrow(1);
         grid.addColumn(new ComponentRenderer<>(this::createEditButton))
                 .setWidth("5em").setFlexGrow(0)
                 .setTextAlign(ColumnTextAlign.END);
@@ -166,6 +166,10 @@ public class EmployeesView extends Div {
         return layout;
     }
 
+    private PresenceComponent createPresenceComponent(Person person) {
+        return new PresenceComponent(localUser, getTopicId(person), person);
+    }
+
     private Component createContactInfo(Person person) {
         Span email = new Span(
                 new Text(person.getEmail() != null ? person.getEmail() : ""));
@@ -180,26 +184,6 @@ public class EmployeesView extends Div {
         return layout;
     }
 
-    class PresenceComponent extends AvatarGroup {
-
-        public PresenceComponent(Person person) {
-            Objects.requireNonNull(person);
-            PresenceAdapter presenceAdapter = new PresenceAdapter(this,
-                localUser, getTopicId(person));
-            presenceAdapter.setAutoPresence(false);
-
-            presenceAdapter.setNewUserHandler(e -> {
-                String description = String
-                    .format("%s is editing this row", e.getName());
-                AvatarGroupItem item = new AvatarGroupItem(description,
-                    e.getImage());
-                item.setColorIndex(
-                    CollaborationEngine.getInstance().getUserColorIndex(e));
-                add(item);
-                return () -> remove(item);
-            });
-        }
-    }
 
     private Component createEditButton(Person person) {
         Button edit = new Button(null, VaadinIcon.EDIT.create(), click -> {
@@ -222,5 +206,28 @@ public class EmployeesView extends Div {
         if (person != null) {
             dialog.open();
         }
+    }
+}
+
+class PresenceComponent extends AvatarGroup {
+
+    public PresenceComponent(UserInfo localUser, String topicId, Person person) {
+        Objects.requireNonNull(localUser);
+        Objects.requireNonNull(topicId);
+        Objects.requireNonNull(person);
+        PresenceAdapter presenceAdapter = new PresenceAdapter(this,
+            localUser, topicId);
+        presenceAdapter.setAutoPresence(false);
+
+        presenceAdapter.setNewUserHandler(e -> {
+            String description = String
+                .format("%s is editing this row", e.getName());
+            AvatarGroupItem item = new AvatarGroupItem(description,
+                e.getImage());
+            item.setColorIndex(
+                CollaborationEngine.getInstance().getUserColorIndex(e));
+            add(item);
+            return () -> remove(item);
+        });
     }
 }
