@@ -1,13 +1,10 @@
 package com.jensjansson.ce.bot;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import com.fasterxml.jackson.core.type.TypeReference;
 
 import com.vaadin.collaborationengine.CollaborationAvatarGroup;
 import com.vaadin.collaborationengine.CollaborationMap;
@@ -15,6 +12,8 @@ import com.vaadin.collaborationengine.TopicConnection;
 import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.function.SerializableFunction;
 import com.vaadin.flow.server.Command;
+
+import com.fasterxml.jackson.core.type.TypeReference;
 
 class BotAvatarUtil {
 
@@ -33,12 +32,13 @@ class BotAvatarUtil {
     }
 
     private static void updateAvatars(TopicConnection topic,
-            SerializableFunction<Stream<UserInfo>, Stream<UserInfo>> updater) {
+        SerializableFunction<Stream<UserInfo>, Stream<UserInfo>> updater) {
         CollaborationMap map = getMap(topic);
         List<UserInfo> oldUsers = map.get(MAP_KEY, LIST_USER_INFO_TYPE_REF);
-        oldUsers = oldUsers != null ? oldUsers : Collections.emptyList();
-        List<UserInfo> newUsers = updater.apply(oldUsers.stream())
-                .collect(Collectors.toList());
+        Stream<UserInfo> oldUsersStream =
+            oldUsers != null ? oldUsers.stream() : Stream.empty();
+        List<UserInfo> newUsers = updater.apply(oldUsersStream)
+            .collect(Collectors.toList());
         map.replace(MAP_KEY, oldUsers, newUsers).thenAccept(success -> {
             if (!success) {
                 updateAvatars(topic, updater);
