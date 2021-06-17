@@ -5,7 +5,7 @@ import com.jensjansson.ce.data.service.PersonService;
 import com.jensjansson.ce.views.main.MainView;
 import com.vaadin.collaborationengine.CollaborationEngine;
 import com.vaadin.collaborationengine.CollaborationMap;
-import com.vaadin.collaborationengine.PresenceAdapter;
+import com.vaadin.collaborationengine.PresenceManager;
 import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
@@ -215,11 +215,11 @@ class PresenceComponent extends AvatarGroup {
         Objects.requireNonNull(localUser);
         Objects.requireNonNull(topicId);
         Objects.requireNonNull(person);
-        PresenceAdapter presenceAdapter = new PresenceAdapter(this,
+        PresenceManager presenceManager = new PresenceManager(this,
             localUser, topicId);
-        presenceAdapter.setAutoPresence(false);
+        presenceManager.setAutoPresence(false);
 
-        presenceAdapter.setNewUserHandler(e -> {
+        presenceManager.setNewUserHandler(e -> {
             String description = String
                 .format("%s is editing this row", e.getName());
             AvatarGroupItem item = new AvatarGroupItem(description,

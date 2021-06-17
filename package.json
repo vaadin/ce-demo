@@ -17,6 +17,7 @@
     "@vaadin/vaadin-confirm-dialog": "21.0.0-alpha6",
     "@vaadin/vaadin-context-menu": "21.0.0-alpha6",
     "@vaadin/vaadin-cookie-consent": "21.0.0-alpha6",
+    "@vaadin/vaadin-core-shrinkwrap": "21.0.0-alpha6",
     "@vaadin/vaadin-crud": "21.0.0-alpha6",
     "@vaadin/vaadin-custom-field": "21.0.0-alpha6",
     "@vaadin/vaadin-date-picker": "21.0.0-alpha6",
@@ -26,6 +27,7 @@
     "@vaadin/vaadin-form-layout": "21.0.0-alpha6",
     "@vaadin/vaadin-grid": "21.0.0-alpha6",
     "@vaadin/vaadin-grid-pro": "21.0.0-alpha6",
+    "@vaadin/vaadin-icon": "21.0.0-alpha6",
     "@vaadin/vaadin-icons": "21.0.0-alpha6",
     "@vaadin/vaadin-item": "21.0.0-alpha6",
     "@vaadin/vaadin-list-box": "21.0.0-alpha6",
@@ -40,6 +42,7 @@
     "@vaadin/vaadin-radio-button": "21.0.0-alpha6",
     "@vaadin/vaadin-rich-text-editor": "21.0.0-alpha6",
     "@vaadin/vaadin-select": "21.0.0-alpha6",
+    "@vaadin/vaadin-shrinkwrap": "21.0.0-alpha6",
     "@vaadin/vaadin-split-layout": "21.0.0-alpha6",
     "@vaadin/vaadin-tabs": "21.0.0-alpha6",
     "@vaadin/vaadin-template-renderer": "21.0.0-alpha6",
@@ -98,6 +101,7 @@
       "@vaadin/vaadin-confirm-dialog": "21.0.0-alpha6",
       "@vaadin/vaadin-context-menu": "21.0.0-alpha6",
       "@vaadin/vaadin-cookie-consent": "21.0.0-alpha6",
+      "@vaadin/vaadin-core-shrinkwrap": "21.0.0-alpha6",
       "@vaadin/vaadin-crud": "21.0.0-alpha6",
       "@vaadin/vaadin-custom-field": "21.0.0-alpha6",
       "@vaadin/vaadin-date-picker": "21.0.0-alpha6",
@@ -107,6 +111,7 @@
       "@vaadin/vaadin-form-layout": "21.0.0-alpha6",
       "@vaadin/vaadin-grid": "21.0.0-alpha6",
       "@vaadin/vaadin-grid-pro": "21.0.0-alpha6",
+      "@vaadin/vaadin-icon": "21.0.0-alpha6",
       "@vaadin/vaadin-icons": "21.0.0-alpha6",
       "@vaadin/vaadin-item": "21.0.0-alpha6",
       "@vaadin/vaadin-list-box": "21.0.0-alpha6",
@@ -121,6 +126,7 @@
       "@vaadin/vaadin-radio-button": "21.0.0-alpha6",
       "@vaadin/vaadin-rich-text-editor": "21.0.0-alpha6",
       "@vaadin/vaadin-select": "21.0.0-alpha6",
+      "@vaadin/vaadin-shrinkwrap": "21.0.0-alpha6",
       "@vaadin/vaadin-split-layout": "21.0.0-alpha6",
       "@vaadin/vaadin-tabs": "21.0.0-alpha6",
       "@vaadin/vaadin-template-renderer": "21.0.0-alpha6",
@@ -156,6 +162,6 @@
       "workbox-precaching": "6.1.0",
       "workbox-webpack-plugin": "6.1.0"
     },
-    "hash": "7b5194573c0943a239eee62a506600c2c7d5b6b4ec31336a20388c1c286e4b8a"
+    "hash": "b968bed3c9e78120115655c67ca61b729e7a85656345fb16a9495f5ba6ba4852"
   }
 }
