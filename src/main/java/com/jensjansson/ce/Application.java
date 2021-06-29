@@ -1,10 +1,14 @@
 package com.jensjansson.ce;
 
+import com.jensjansson.ce.bot.PresenceBot;
+import com.jensjansson.ce.data.service.PersonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.vaadin.collaborationengine.CollaborationEngine;
 import com.vaadin.collaborationengine.CollaborationEngineConfiguration;
@@ -23,6 +27,7 @@ import com.vaadin.flow.theme.Theme;
 @PWA(name = "CE Demo", shortName = "CE Demo")
 @Push
 @Theme("ce-demo")
+@EnableScheduling
 public class Application extends SpringBootServletInitializer
         implements AppShellConfigurator, VaadinServiceInitListener {
 
@@ -32,6 +37,9 @@ public class Application extends SpringBootServletInitializer
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
+
+    @Autowired
+    PersonService personService;
 
     @Override
     public void serviceInit(ServiceInitEvent serviceInitEvent) {
@@ -52,7 +60,11 @@ public class Application extends SpringBootServletInitializer
         };
         CollaborationEngineConfiguration configuration = new CollaborationEngineConfiguration(
                 licenseEventHandler);
-        CollaborationEngine.configure(serviceInitEvent.getSource(),
+        CollaborationEngine ce = CollaborationEngine.configure(serviceInitEvent.getSource(),
                 configuration);
+        PresenceBot bot = new PresenceBot(personService, ce);
+        Thread thread = new Thread(bot);
+        thread.setDaemon(true);
+        thread.start();
     }
 }

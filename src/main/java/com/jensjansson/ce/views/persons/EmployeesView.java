@@ -1,5 +1,6 @@
 package com.jensjansson.ce.views.persons;
 
+import com.jensjansson.ce.bot.PresenceBot;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
 import com.jensjansson.ce.views.main.MainView;
@@ -167,7 +168,10 @@ public class EmployeesView extends Div {
     }
 
     private PresenceComponent createPresenceComponent(Person person) {
-        return new PresenceComponent(localUser, getTopicId(person), person);
+        String topicId = getTopicId(person);
+        PresenceComponent component = new PresenceComponent(localUser, topicId, person);
+        //component.addAttachListener(e -> PresenceBot.instance.add(topicId, component));
+        return component;
     }
 
     private Component createContactInfo(Person person) {
@@ -193,10 +197,10 @@ public class EmployeesView extends Div {
         return edit;
     }
 
-    private String getTopicId(Person person) {
+    public static String getTopicId(Person person) {
         String topicId = null;
         if (person != null && person.getId() != null) {
-            topicId = "person/" + String.valueOf(person.getId());
+            topicId = "person/" + person.getId();
         }
         return topicId;
     }
@@ -217,7 +221,7 @@ class PresenceComponent extends AvatarGroup {
         Objects.requireNonNull(person);
         PresenceManager presenceManager = new PresenceManager(this,
             localUser, topicId);
-        presenceManager.setAutoPresence(false);
+        presenceManager.markAsPresent(false);
 
         presenceManager.setNewUserHandler(e -> {
             String description = String
