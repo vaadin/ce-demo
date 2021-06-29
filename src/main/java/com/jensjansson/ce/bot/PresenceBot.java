@@ -28,17 +28,15 @@ public class PresenceBot implements Runnable {
     private PersonService personService;
     private CollaborationEngine ce;
     private List<Integer> ids = Collections.emptyList();
-    private List<UserInfo> bots;
+    private UserInfo bot;
 
-    private List<PresenceManager> presenceManagers = Collections.emptyList();
+    private PresenceManager presenceManager;
 
 
-    public PresenceBot(PersonService personService, CollaborationEngine ce) {
+    public PresenceBot(PersonService personService, CollaborationEngine ce, UserInfo bot) {
         this.personService = personService;
         this.ce = ce;
-        bots = Stream
-            .generate(BotUserGenerator::generateBotUser).limit(5)
-            .collect(Collectors.toList());
+        this.bot = bot;
     }
 
     @Override
@@ -62,7 +60,10 @@ public class PresenceBot implements Runnable {
                 return;
             }
         }
-        presenceManagers.forEach(PresenceManager::close);
+        if (this.presenceManager != null) {
+            this.presenceManager.close();
+            this.presenceManager = null;
+        }
         Constructor<PresenceManager> constructor;
         try {
             constructor = PresenceManager.class
@@ -73,19 +74,16 @@ public class PresenceBot implements Runnable {
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
-        presenceManagers = bots.stream().map(bot -> {
             String topic = String
                 .format("person/%d", ids.get(random.nextInt(25) + 1));
             try {
-                PresenceManager manager = constructor
+                this.presenceManager = constructor
                     .newInstance(new EagerConnectionContext(), bot, topic,
                         ce);
-                manager.markAsPresent(true);
-                return manager;
+                this.presenceManager.markAsPresent(true);
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
                 throw new RuntimeException(e);
             }
-        }).collect(Collectors.toList());
     }
 
     public synchronized void add(String topic, Component component) {

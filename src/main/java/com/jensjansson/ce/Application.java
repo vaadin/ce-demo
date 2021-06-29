@@ -1,5 +1,8 @@
 package com.jensjansson.ce;
 
+import java.util.concurrent.ThreadLocalRandom;
+
+import com.jensjansson.ce.bot.BotUserGenerator;
 import com.jensjansson.ce.bot.PresenceBot;
 import com.jensjansson.ce.data.service.PersonService;
 import org.slf4j.Logger;
@@ -13,6 +16,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import com.vaadin.collaborationengine.CollaborationEngine;
 import com.vaadin.collaborationengine.CollaborationEngineConfiguration;
 import com.vaadin.collaborationengine.LicenseEventHandler;
+import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.server.PWA;
@@ -62,9 +66,16 @@ public class Application extends SpringBootServletInitializer
                 licenseEventHandler);
         CollaborationEngine ce = CollaborationEngine.configure(serviceInitEvent.getSource(),
                 configuration);
-        PresenceBot bot = new PresenceBot(personService, ce);
-        Thread thread = new Thread(bot);
-        thread.setDaemon(true);
-        thread.start();
+        final int botCount = 5;
+
+        for(int i = 0 ; i < botCount ; i++) {
+            UserInfo userInfo = BotUserGenerator.generateBotUser();
+            userInfo.setImage("images/avatars/"
+                + (8 -i) + ".png");
+            PresenceBot bot = new PresenceBot(personService, ce, userInfo);
+            Thread thread = new Thread(bot);
+            thread.setDaemon(true);
+            thread.start();
+        }
     }
 }
