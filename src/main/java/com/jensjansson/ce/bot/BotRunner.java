@@ -5,6 +5,7 @@ import com.jensjansson.ce.data.service.PersonService;
 
 import com.vaadin.collaborationengine.CollaborationEngine;
 import com.vaadin.collaborationengine.TopicConnection;
+import com.vaadin.collaborationengine.TopicConnectionRegistration;
 import com.vaadin.collaborationengine.UserInfo;
 
 import static com.jensjansson.ce.bot.BotAvatarUtil.addAvatar;
@@ -15,10 +16,10 @@ import static com.jensjansson.ce.bot.BotAvatarUtil.removeAvatar;
 
 public class BotRunner implements Runnable {
 
-    public static void onUserJoined(String topicId, UserInfo localUser,
+    public static TopicConnectionRegistration onUserJoined(String topicId, UserInfo localUser,
             Person person, PersonService personService) {
         CollaborationEngine ce = CollaborationEngine.getInstance();
-        ce.openTopicConnection(new EagerConnectionContext(), topicId, localUser,
+        return ce.openTopicConnection(new EagerConnectionContext(), topicId, localUser,
                 topic -> {
                     if (getBotCount(topic) > 0) {
                         // Only one bot at a time for each item
@@ -103,7 +104,7 @@ public class BotRunner implements Runnable {
         }
     }
 
-    private static int generateNumberOfEditsBeforeSave() {
+    public static int generateNumberOfEditsBeforeSave() {
         return 2 + (int) (Math.random() * 4);
     }
 

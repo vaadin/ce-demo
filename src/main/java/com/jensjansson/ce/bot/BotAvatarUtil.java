@@ -57,7 +57,7 @@ class BotAvatarUtil {
 
     public static int getRealUserCount(TopicConnection topic) {
         return getUserCount(topic,
-                u -> !u.getId().startsWith(BotUserGenerator.BOT_ID_PREFIX));
+                u -> !u.getId().startsWith(BotUserGenerator.BOT_ID_PREFIX) && !u.getId().startsWith(PresenceBot.BOT_PREFIX));
     }
 
     private static int getUserCount(TopicConnection topic,

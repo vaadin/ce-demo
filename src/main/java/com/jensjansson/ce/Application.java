@@ -1,6 +1,8 @@
 package com.jensjansson.ce;
 
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.IntFunction;
+import java.util.stream.IntStream;
 
 import com.jensjansson.ce.bot.BotUserGenerator;
 import com.jensjansson.ce.bot.PresenceBot;
@@ -66,16 +68,7 @@ public class Application extends SpringBootServletInitializer
                 licenseEventHandler);
         CollaborationEngine ce = CollaborationEngine.configure(serviceInitEvent.getSource(),
                 configuration);
-        final int botCount = 5;
 
-        for(int i = 0 ; i < botCount ; i++) {
-            UserInfo userInfo = BotUserGenerator.generateBotUser();
-            userInfo.setImage("images/avatars/"
-                + (8 -i) + ".png");
-            PresenceBot bot = new PresenceBot(personService, ce, userInfo);
-            Thread thread = new Thread(bot);
-            thread.setDaemon(true);
-            thread.start();
-        }
+        PresenceBot.createInstance(personService, ce);
     }
 }

@@ -250,7 +250,7 @@ public class EditorView extends Div {
             expirationRegistration.remove();
         }
         if (topicId != null) {
-            BotRunner.onUserJoined(topicId, localUser, person, personService);
+            //BotRunner.onUserJoined(topicId, localUser, person, personService);
             expirationRegistration = CollaborationEngine.getInstance()
                     .openTopicConnection(this, topicId, localUser,
                             topicConnection -> {

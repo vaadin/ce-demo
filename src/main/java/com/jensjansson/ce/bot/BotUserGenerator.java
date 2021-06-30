@@ -17,8 +17,12 @@ public class BotUserGenerator {
     private static AtomicInteger counter = new AtomicInteger(0);
 
     public static UserInfo generateBotUser() {
+       return generateBotUser(BOT_ID_PREFIX);
+    }
+
+    public static UserInfo generateBotUser(String prefix) {
         UserInfo user = new UserInfo(
-                BOT_ID_PREFIX + UUID.randomUUID().toString());
+                prefix + UUID.randomUUID().toString());
         user.setName("Bot " + names.get(counter.getAndUpdate(oldValue -> {
             if (oldValue < names.size() - 1) {
                 return oldValue + 1;
