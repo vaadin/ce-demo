@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -232,6 +233,7 @@ public class PresenceBot implements Runnable {
 
         int saveAfter = BotRunner.generateNumberOfEditsBeforeSave();
         int editCounter = 0;
+        Iterator<Runnable> currentEditSteps;
 
         Bot(String topicId, UserInfo user,Person person) {
             this.user = user;
@@ -260,13 +262,15 @@ public class PresenceBot implements Runnable {
 
                     editCounter = 0;
                     saveAfter = BotRunner.generateNumberOfEditsBeforeSave();
+                    currentEditSteps = null;
+                } else if(currentEditSteps != null && currentEditSteps.hasNext()){
+                    currentEditSteps.next().run();
                 } else {
                     System.out.println("Random edit for " + person.getFirstName());
-                    BotFieldEditor.editRandomField(topic, user);
+                    currentEditSteps = BotFieldEditor.editRandomField(topic, user).iterator();
                     editCounter++;
                 }
             }
-
     }
 
     private String createTopic(Integer id) {

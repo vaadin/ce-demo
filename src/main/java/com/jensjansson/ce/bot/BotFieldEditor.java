@@ -1,6 +1,8 @@
 package com.jensjansson.ce.bot;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -31,35 +33,40 @@ class BotFieldEditor {
                 () -> getRandomEntry(EditorView.HAPPINESS_VALUES));
     }
 
-    static void editRandomField(TopicConnection topic, UserInfo user) {
+    static List<Runnable> editRandomField(TopicConnection topic, UserInfo user) {
 
+        List<Runnable> result = new ArrayList<>();
         String propertyName = getRandomEntry(fieldToValueProvider.keySet());
 
         Object value = fieldToValueProvider.get(propertyName).get();
 
         //sleepRandom(1, 3);
-
+        result.add(() -> {});
         if (propertyName.equals("happiness")) {
-            CollaborationBinderUtil.addEditor(topic, propertyName, user,
+            result.add( () -> {
+                CollaborationBinderUtil.addEditor(topic, propertyName, user,
                     EditorView.HAPPINESS_VALUES.indexOf(value));
-            // RadioButtonGroup changes the value immediately when
-            CollaborationBinderUtil.setFieldValue(topic, propertyName, value);
-           // sleepRandom(3, 5);
+                // RadioButtonGroup changes the value immediately when
+                CollaborationBinderUtil.setFieldValue(topic, propertyName, value);
+                // sleepRandom(3, 5);
+            });
         } else {
-            CollaborationBinderUtil.addEditor(topic, propertyName, user);
+            result.add( () -> CollaborationBinderUtil.addEditor(topic, propertyName, user));
 
             //sleepRandom(3, 5);
 
+            result.add(() -> {
             // Skip changing the value if there's another focused user
             if (getEditorCount(topic, propertyName) < 2) {
                 CollaborationBinderUtil.setFieldValue(topic, propertyName,
                         value);
                 //sleepRandom(0, 2);
             }
+            });
         }
 
-        CollaborationBinderUtil.removeEditor(topic, propertyName, user);
-
+        result.add(() ->CollaborationBinderUtil.removeEditor(topic, propertyName, user));
+        return result;
     }
 
     private static Person generatePerson() {
