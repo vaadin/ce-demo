@@ -169,8 +169,7 @@ public class EmployeesView extends Div {
 
     private PresenceComponent createPresenceComponent(Person person) {
         String topicId = getTopicId(person);
-        PresenceComponent component = new PresenceComponent(localUser, topicId, person);
-        //component.addAttachListener(e -> PresenceBot.instance.add(topicId, component));
+        PresenceComponent component = new PresenceComponent(localUser, topicId);
         return component;
     }
 
@@ -215,10 +214,9 @@ public class EmployeesView extends Div {
 
 class PresenceComponent extends AvatarGroup {
 
-    public PresenceComponent(UserInfo localUser, String topicId, Person person) {
+    public PresenceComponent(UserInfo localUser, String topicId) {
         Objects.requireNonNull(localUser);
         Objects.requireNonNull(topicId);
-        Objects.requireNonNull(person);
         PresenceManager presenceManager = new PresenceManager(this,
             localUser, topicId);
         presenceManager.markAsPresent(false);
@@ -233,5 +231,7 @@ class PresenceComponent extends AvatarGroup {
             add(item);
             return () -> remove(item);
         });
+        addAttachListener( e -> System.out.println("Attached to " + topicId));
+        addDetachListener( e -> System.out.println("Detached from" + topicId));
     }
 }
