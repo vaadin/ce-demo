@@ -202,7 +202,6 @@ public class PresenceBot implements Runnable {
             if(hasUsers) {
                 presenceManager.markAsPresent(true);
                 Person person = personService.get(id).orElse(null);
-                //this.topicConnectionRegistration = BotRunner.onUserJoined(topic,userInfo,person,personService);
                 botMap.computeIfAbsent(id, id -> new Bot(topic,userInfo,person));
             } else {
                 Bot bot = botMap.remove(id);
@@ -229,7 +228,7 @@ public class PresenceBot implements Runnable {
         Person person;
         volatile boolean shouldStop;
 
-        int saveAfter = BotRunner.generateNumberOfEditsBeforeSave();
+        int saveAfter = generateNumberOfEditsBeforeSave();
         int editCounter = 0;
         Iterator<Runnable> currentEditSteps;
 
@@ -249,7 +248,6 @@ public class PresenceBot implements Runnable {
         }
         @Override
         public void run() {
-            //sleepRandom(1, 3);
                 if(topicRegistration == null || shouldStop) {
                     return; // Not connected yet or stopped
                 }
@@ -259,7 +257,7 @@ public class PresenceBot implements Runnable {
                     BotSaver.save(ce, topic, person, personService, user);
 
                     editCounter = 0;
-                    saveAfter = BotRunner.generateNumberOfEditsBeforeSave();
+                    saveAfter = generateNumberOfEditsBeforeSave();
                     currentEditSteps = null;
                 } else if(currentEditSteps != null && currentEditSteps.hasNext()){
                     currentEditSteps.next().run();
@@ -275,4 +273,7 @@ public class PresenceBot implements Runnable {
        return String.format("person/%d", id);
     }
 
+    private static int generateNumberOfEditsBeforeSave() {
+        return 2 + (int) (Math.random() * 4);
+    }
 }
