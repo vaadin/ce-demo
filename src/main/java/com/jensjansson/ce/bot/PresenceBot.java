@@ -12,7 +12,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -27,7 +26,6 @@ import com.vaadin.flow.shared.Registration;
 
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
-import static com.jensjansson.ce.bot.BotRunner.sleepRandom;
 
 public class PresenceBot implements Runnable {
     public static final String BOT_PREFIX = "pr-"+BotUserGenerator.BOT_ID_PREFIX;

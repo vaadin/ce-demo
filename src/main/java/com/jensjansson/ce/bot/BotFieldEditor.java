@@ -17,8 +17,6 @@ import com.vaadin.collaborationengine.CollaborationBinderUtil;
 import com.vaadin.collaborationengine.TopicConnection;
 import com.vaadin.collaborationengine.UserInfo;
 
-import static com.jensjansson.ce.bot.BotRunner.sleepRandom;
-
 class BotFieldEditor {
 
     private static Map<String, Supplier<Object>> fieldToValueProvider = new ConcurrentHashMap<>();
@@ -40,8 +38,6 @@ class BotFieldEditor {
 
         Object value = fieldToValueProvider.get(propertyName).get();
 
-        //sleepRandom(1, 3);
-        result.add(() -> {});
         if (propertyName.equals("happiness")) {
             result.add( () -> {
                 CollaborationBinderUtil.addEditor(topic, propertyName, user,
