@@ -1,6 +1,5 @@
 package com.jensjansson.ce.views.persons;
 
-import com.jensjansson.ce.bot.PresenceBot;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
 import com.jensjansson.ce.views.main.MainView;

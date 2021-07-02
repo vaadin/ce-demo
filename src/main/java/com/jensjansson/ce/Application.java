@@ -1,11 +1,6 @@
 package com.jensjansson.ce;
 
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.IntFunction;
-import java.util.stream.IntStream;
-
-import com.jensjansson.ce.bot.BotUserGenerator;
-import com.jensjansson.ce.bot.PresenceBot;
+import com.jensjansson.ce.bot.BotManager;
 import com.jensjansson.ce.data.service.PersonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +13,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import com.vaadin.collaborationengine.CollaborationEngine;
 import com.vaadin.collaborationengine.CollaborationEngineConfiguration;
 import com.vaadin.collaborationengine.LicenseEventHandler;
-import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.server.PWA;
@@ -69,6 +63,6 @@ public class Application extends SpringBootServletInitializer
         CollaborationEngine ce = CollaborationEngine.configure(serviceInitEvent.getSource(),
                 configuration);
 
-        PresenceBot.createInstance(personService, ce);
+        BotManager.createInstance(personService, ce);
     }
 }

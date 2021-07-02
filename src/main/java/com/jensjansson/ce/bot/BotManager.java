@@ -26,16 +26,19 @@ import com.jensjansson.ce.data.service.PersonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PresenceBot implements Runnable {
+/**
+ * Thread that controls the bots, both for presence and for editing forms.
+ */
+public class BotManager implements Runnable {
     public static final String BOT_PREFIX =
         "pr-" + BotUserGenerator.BOT_ID_PREFIX;
     private static final Random random = new Random();
     private static final Logger logger = LoggerFactory
-        .getLogger(PresenceBot.class);
+        .getLogger(BotManager.class);
 
     private static final int botCount = 5;
     private static final int maxAvatarNumber = 8;
-    private static PresenceBot instance;
+    private static BotManager instance;
 
     private PersonService personService;
     private CollaborationEngine ce;
@@ -46,7 +49,7 @@ public class PresenceBot implements Runnable {
     private BiFunction<UserInfo, String, PresenceManager> presenceManagerCreator;
     private ConcurrentHashMap<Integer, Bot> botMap = new ConcurrentHashMap<>();
 
-    PresenceBot(PersonService personService, CollaborationEngine ce) {
+    BotManager(PersonService personService, CollaborationEngine ce) {
         this.personService = personService;
         this.ce = ce;
         this.bots = createBotUsers();
@@ -60,7 +63,7 @@ public class PresenceBot implements Runnable {
             throw new IllegalStateException(
                 "Only 1 instance should be created");
         }
-        instance = new PresenceBot(personService, ce);
+        instance = new BotManager(personService, ce);
         Thread thread = new Thread(instance);
         thread.setDaemon(true);
         thread.setName("Bot-Thread");
@@ -199,7 +202,7 @@ public class PresenceBot implements Runnable {
         private boolean isRealUser(UserInfo user) {
             String id = user.getId();
             return !id.startsWith(BotUserGenerator.BOT_ID_PREFIX) && !id
-                .startsWith(PresenceBot.BOT_PREFIX);
+                .startsWith(BotManager.BOT_PREFIX);
         }
 
         private void update() {
