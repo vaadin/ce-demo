@@ -3,11 +3,9 @@ package com.jensjansson.ce.bot;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,16 +18,20 @@ import com.vaadin.collaborationengine.ConnectionContext;
 import com.vaadin.collaborationengine.NewUserHandler;
 import com.vaadin.collaborationengine.PresenceManager;
 import com.vaadin.collaborationengine.TopicConnection;
-import com.vaadin.collaborationengine.TopicConnectionRegistration;
 import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.shared.Registration;
 
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PresenceBot implements Runnable {
-    public static final String BOT_PREFIX = "pr-"+BotUserGenerator.BOT_ID_PREFIX;
+    public static final String BOT_PREFIX =
+        "pr-" + BotUserGenerator.BOT_ID_PREFIX;
     private static final Random random = new Random();
+    private static final Logger logger = LoggerFactory
+        .getLogger(PresenceBot.class);
 
     private static final int botCount = 5;
     private static final int maxAvatarNumber = 8;
@@ -42,8 +44,7 @@ public class PresenceBot implements Runnable {
 
     private PresenceManager[] presenceManagers;
     private BiFunction<UserInfo, String, PresenceManager> presenceManagerCreator;
-    private Map<Integer,PresenceManager> presenceObservers = new HashMap<>();
-    private ConcurrentHashMap<Integer,Bot> botMap = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Integer, Bot> botMap = new ConcurrentHashMap<>();
 
     PresenceBot(PersonService personService, CollaborationEngine ce) {
         this.personService = personService;
@@ -66,6 +67,10 @@ public class PresenceBot implements Runnable {
         thread.start();
     }
 
+    private static int generateNumberOfEditsBeforeSave() {
+        return 2 + (int) (Math.random() * 4);
+    }
+
     @Override
     public synchronized void run() {
 
@@ -76,14 +81,14 @@ public class PresenceBot implements Runnable {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            System.out.println("Running bots");
-            botMap.values().stream().filter(b -> !b.shouldStop).collect(
-                Collectors.toList()).forEach(bot -> {
-                    try {
-                        bot.run();
-                    }catch (IllegalStateException e) {
-                        e.printStackTrace();
-                    }
+            logger.debug("Running bots");
+            botMap.values().stream().filter(b -> !b.shouldStop)
+                .collect(Collectors.toList()).forEach(bot -> {
+                try {
+                    bot.run();
+                } catch (IllegalStateException e) {
+                    logger.warn("Bot threw exception", e);
+                }
             });
         }
     }
@@ -144,13 +149,19 @@ public class PresenceBot implements Runnable {
     }
 
     private void fillPresenceObservers() {
-        for(Integer id : ids) {
+        for (Integer id : ids) {
             UserInfo userInfo = bots.get(id % bots.size());
             String topic = createTopic(id);
-            PresenceManager presenceManager = presenceManagerCreator.apply(userInfo,topic);
+            PresenceManager presenceManager = presenceManagerCreator
+                .apply(userInfo, topic);
             presenceManager.markAsPresent(false);
-            presenceManager.setNewUserHandler(new UserHandler(id, userInfo, topic, presenceManager));
+            presenceManager.setNewUserHandler(
+                new UserHandler(id, userInfo, topic, presenceManager));
         }
+    }
+
+    private String createTopic(Integer id) {
+        return String.format("person/%d", id);
     }
 
     class UserHandler implements NewUserHandler {
@@ -162,7 +173,6 @@ public class PresenceBot implements Runnable {
 
         private Set<UserInfo> users = new HashSet<>();
         private boolean hasUsers;
-        private TopicConnectionRegistration topicConnectionRegistration;
 
         public UserHandler(Integer id, UserInfo userInfo, String topic,
             PresenceManager presenceManager) {
@@ -174,12 +184,12 @@ public class PresenceBot implements Runnable {
 
         @Override
         public Registration handleNewUser(UserInfo user) {
-            if(isRealUser(user)) {
+            if (isRealUser(user)) {
                 users.add(user);
                 update();
             }
             return () -> {
-                if(isRealUser(user)) {
+                if (isRealUser(user)) {
                     users.remove(user);
                     update();
                 }
@@ -195,27 +205,23 @@ public class PresenceBot implements Runnable {
         private void update() {
             boolean hadUsers = hasUsers;
             hasUsers = !users.isEmpty();
-            if(hadUsers == hasUsers) {
+            if (hadUsers == hasUsers) {
                 return;
             }
 
-            if(hasUsers) {
+            if (hasUsers) {
                 presenceManager.markAsPresent(true);
                 Person person = personService.get(id).orElse(null);
-                botMap.computeIfAbsent(id, id -> new Bot(topic,userInfo,person));
+                botMap.computeIfAbsent(id,
+                    id -> new Bot(topic, userInfo, person));
             } else {
                 Bot bot = botMap.remove(id);
-                if(bot != null) {
-                    System.out.println("Bot removed for " + bot.person.getFirstName());
-                    bot.shouldStop = true;
-                    bot.topicRegistration.remove();
-                    bot.topicRegistration = null;
+                if (bot != null) {
+                    bot.stop();
                     presenceManager.markAsPresent(false);
                 } else {
-                    System.out.println("Bot not removed for id" + id);
+                    logger.debug("Bot not removed for {}", id);
                 }
-                //this.topicConnectionRegistration.remove();
-                //this.topicConnectionRegistration = null;
             }
         }
     }
@@ -232,48 +238,55 @@ public class PresenceBot implements Runnable {
         int editCounter = 0;
         Iterator<Runnable> currentEditSteps;
 
-        Bot(String topicId, UserInfo user,Person person) {
+        Bot(String topicId, UserInfo user, Person person) {
             this.user = user;
             this.person = person;
-            System.out.println("Created bot for " + person.getFirstName());
-            this.topicRegistration = ce.openTopicConnection(new EagerConnectionContext(), topicId, user, topic -> {
-                this.topic=topic;
-                System.out.println("Topic connected for " + person.getFirstName());
-                return () ->{
-                    shouldStop = true;
-                    this.topic = null;
-                    System.out.println("Topic disconnected for " + person.getFirstName());
-                };
-            });
+            log("Created bot");
+            this.topicRegistration = ce
+                .openTopicConnection(new EagerConnectionContext(), topicId,
+                    user, topic -> {
+                        this.topic = topic;
+                        log("Topic connected");
+                        return () -> {
+                            shouldStop = true;
+                            this.topic = null;
+                            log("Topic disconnected");
+                        };
+                    });
         }
+
         @Override
         public void run() {
-                if(topicRegistration == null || shouldStop) {
-                    return; // Not connected yet or stopped
-                }
-                if (editCounter >= saveAfter) {
-                    System.out.println("Called save for " + person.getFirstName());
-                    //sleepRandom(1, 2);
-                    BotSaver.save(ce, topic, person, personService, user);
-
-                    editCounter = 0;
-                    saveAfter = generateNumberOfEditsBeforeSave();
-                    currentEditSteps = null;
-                } else if(currentEditSteps != null && currentEditSteps.hasNext()){
-                    currentEditSteps.next().run();
-                } else {
-                    System.out.println("Random edit for " + person.getFirstName());
-                    currentEditSteps = BotFieldEditor.editRandomField(topic, user).iterator();
-                    editCounter++;
-                }
+            if (topicRegistration == null || shouldStop) {
+                return; // Not connected yet or stopped
             }
-    }
+            if (editCounter >= saveAfter) {
+                log("Called save");
+                BotSaver.save(ce, topic, person, personService, user);
 
-    private String createTopic(Integer id) {
-       return String.format("person/%d", id);
-    }
+                editCounter = 0;
+                saveAfter = generateNumberOfEditsBeforeSave();
+                currentEditSteps = null;
+            } else if (currentEditSteps != null && currentEditSteps.hasNext()) {
+                currentEditSteps.next().run();
+            } else {
+                log("Random edit");
+                currentEditSteps = BotFieldEditor.editRandomField(topic, user)
+                    .iterator();
+                editCounter++;
+            }
+        }
 
-    private static int generateNumberOfEditsBeforeSave() {
-        return 2 + (int) (Math.random() * 4);
+        void stop() {
+            log("Bot removed");
+            this.shouldStop = true;
+            this.topicRegistration.remove();
+            this.topicRegistration = null;
+        }
+
+        void log(String message) {
+            logger.debug("{} for {}({})", message, this.person.getFirstName(),
+                this.person.getId());
+        }
     }
 }
