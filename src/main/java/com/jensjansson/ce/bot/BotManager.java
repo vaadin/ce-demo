@@ -82,7 +82,7 @@ public class BotManager implements Runnable {
             try {
                 wait(random.nextInt(1000) + 1000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.error("Thread interrupted", e);
             }
             logger.debug("Running bots");
             botMap.values().stream().filter(b -> !b.shouldStop)
