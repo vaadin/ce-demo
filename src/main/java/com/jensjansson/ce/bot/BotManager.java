@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 public class BotManager implements Runnable {
     public static final String BOT_PREFIX =
         "pr-" + BotUserGenerator.BOT_ID_PREFIX;
-    private static final Random random = new Random();
+    private final Random random = new Random();
     private static final Logger logger = LoggerFactory
         .getLogger(BotManager.class);
 
@@ -70,8 +70,8 @@ public class BotManager implements Runnable {
         thread.start();
     }
 
-    private static int generateNumberOfEditsBeforeSave() {
-        return 2 + (int) (Math.random() * 4);
+    private int generateNumberOfEditsBeforeSave() {
+        return 2 + (random.nextInt(4));
     }
 
     @Override
