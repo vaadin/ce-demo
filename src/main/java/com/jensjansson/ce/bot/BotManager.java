@@ -2,10 +2,13 @@ package com.jensjansson.ce.bot;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.time.Instant;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,16 +47,18 @@ public class BotManager implements Runnable {
     private CollaborationEngine ce;
     private List<Integer> ids = Collections.emptyList();
     private List<UserInfo> bots;
+    private List<ExtraBot> extraBots;
 
-    private PresenceManager[] presenceManagers;
     private BiFunction<UserInfo, String, PresenceManager> presenceManagerCreator;
+    private Map<Integer,UserHandler> handlerMap;
     private ConcurrentHashMap<Integer, Bot> botMap = new ConcurrentHashMap<>();
 
     BotManager(PersonService personService, CollaborationEngine ce) {
         this.personService = personService;
         this.ce = ce;
-        this.bots = createBotUsers();
-        this.presenceManagers = new PresenceManager[botCount];
+        this.bots = createBotUsers(botCount);
+        this.extraBots = createBotUsers(5).stream().map(ExtraBot::new).collect(
+            Collectors.toList());
         this.presenceManagerCreator = createPresenceManagerCreator();
     }
 
@@ -81,12 +86,17 @@ public class BotManager implements Runnable {
             doWait(1000);
             initialized = initializeIfPossible();
         }
-        IntStream.range(0,botCount).forEach(this::createPresence);
-        doWait(10000);
+        IntStream.range(0,extraBots.size()).forEach(this::createPresence);
+        for (int i = 0; true; i = (i + 1) % extraBots.size()) {
+            if(random.nextDouble() < 0.2) {
+                createPresence(i);
+            }
+            UserHandler handler = handlerMap.get(ids.get(random.nextInt(ids.size())));
+            //Ignore if has users.
+            if(handler.hasUsers) continue;
+            handler.presenceManager.markAsPresent(random.nextBoolean());
 
-        for (int i = 0; true; i = (i + 1) % botCount) {
-            createPresence(i);
-            doWait(random.nextInt(1000) + 1000);
+            doWait(500);
 
             logger.debug("Running bots");
             botMap.values().stream().filter(b -> !b.shouldStop)
@@ -108,8 +118,8 @@ public class BotManager implements Runnable {
         }
     }
 
-    private List<UserInfo> createBotUsers() {
-        return IntStream.range(0, botCount).mapToObj(i -> {
+    private static List<UserInfo> createBotUsers(int count) {
+        return IntStream.range(0, count).mapToObj(i -> {
             UserInfo bot = BotUserGenerator.generateBotUser(BOT_PREFIX);
             String image = String
                 .format("images/avatars/%d.png", (i % maxAvatarNumber) + 1);
@@ -133,20 +143,20 @@ public class BotManager implements Runnable {
     }
 
     private void createPresence(int i) {
-        String topic = createTopic(random.nextInt(40) + 1);
-        PresenceManager previousPresenceManager = presenceManagers[i];
+        String topic = createTopic(random.nextInt(20) + 1);
+        ExtraBot bot = extraBots.get(i);
+        PresenceManager previousPresenceManager = bot.presenceManager;
         if (previousPresenceManager != null && topic
             .equals(previousPresenceManager.getTopicId())) {
             //Nothing to do
             return;
         }
         if (previousPresenceManager != null) {
+            bot.presenceManager = null;
             previousPresenceManager.close();
-            presenceManagers[i] = null;
         }
-        presenceManagers[i] = presenceManagerCreator.apply(bots.get(i), topic);
+        bot.presenceManager = presenceManagerCreator.apply(bot.userInfo, topic);
     }
-
     private BiFunction<UserInfo, String, PresenceManager> createPresenceManagerCreator() {
 
         Constructor<PresenceManager> constructor;
@@ -171,15 +181,20 @@ public class BotManager implements Runnable {
     }
 
     private void fillPresenceObservers() {
+        Map<Integer, UserHandler> handlerMap = new HashMap<>();
         for (Integer id : ids) {
             UserInfo userInfo = bots.get(id % bots.size());
             String topic = createTopic(id);
             PresenceManager presenceManager = presenceManagerCreator
                 .apply(userInfo, topic);
-            presenceManager.markAsPresent(false);
-            presenceManager.setNewUserHandler(
-                new UserHandler(id, userInfo, topic, presenceManager));
+            presenceManager.markAsPresent(random.nextBoolean());
+            UserHandler userHandler = new UserHandler(id, userInfo, topic,
+                presenceManager);
+            presenceManager.setNewUserHandler(userHandler);
+            handlerMap.put(id, userHandler);
         }
+
+        this.handlerMap = Collections.unmodifiableMap(handlerMap);
     }
 
     private String createTopic(Integer id) {
@@ -194,7 +209,7 @@ public class BotManager implements Runnable {
         private PresenceManager presenceManager;
 
         private Set<UserInfo> users = new HashSet<>();
-        private boolean hasUsers;
+        private volatile boolean hasUsers;
 
         public UserHandler(Integer id, UserInfo userInfo, String topic,
             PresenceManager presenceManager) {
@@ -240,7 +255,6 @@ public class BotManager implements Runnable {
                 Bot bot = botMap.remove(id);
                 if (bot != null) {
                     bot.stop();
-                    presenceManager.markAsPresent(false);
                 } else {
                     logger.debug("Bot not removed for {}", id);
                 }
@@ -249,6 +263,7 @@ public class BotManager implements Runnable {
     }
 
     class Bot implements Runnable {
+        private final int delayInSeconds = 4;
 
         UserInfo user;
         volatile TopicConnection topic;
@@ -258,7 +273,8 @@ public class BotManager implements Runnable {
 
         int saveAfter = generateNumberOfEditsBeforeSave();
         int editCounter = 0;
-        Iterator<Runnable> currentEditSteps;
+        Instant lastExecution = Instant.now().minusSeconds(delayInSeconds);
+        ListIterator<Runnable> currentEditSteps;
 
         Bot(String topicId, UserInfo user, Person person) {
             this.user = user;
@@ -282,6 +298,12 @@ public class BotManager implements Runnable {
             if (topicRegistration == null || shouldStop) {
                 return; // Not connected yet or stopped
             }
+            boolean shouldWait = lastExecution.plusSeconds(delayInSeconds)
+                    .compareTo(Instant.now()) < 0;
+            if (shouldWait) {
+                return; // Wait until enough time has passed between edits
+            }
+            lastExecution = Instant.now();
             if (editCounter >= saveAfter) {
                 log("Called save");
                 BotSaver.save(ce, topic, person, personService, user);
@@ -291,11 +313,13 @@ public class BotManager implements Runnable {
                 currentEditSteps = null;
             } else if (currentEditSteps != null && currentEditSteps.hasNext()) {
                 currentEditSteps.next().run();
+                if(!currentEditSteps.hasNext()) {
+                    ++editCounter;
+                }
             } else {
                 log("Random edit");
                 currentEditSteps = BotFieldEditor.editRandomField(topic, user)
-                    .iterator();
-                editCounter++;
+                    .listIterator();
             }
         }
 
@@ -309,6 +333,15 @@ public class BotManager implements Runnable {
         void log(String message) {
             logger.debug("{} for {}({})", message, this.person.getFirstName(),
                 this.person.getId());
+        }
+    }
+
+    class ExtraBot {
+       private UserInfo userInfo;
+       private PresenceManager presenceManager;
+
+        public ExtraBot(UserInfo userInfo) {
+            this.userInfo = userInfo;
         }
     }
 }
