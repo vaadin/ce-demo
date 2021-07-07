@@ -27,7 +27,6 @@ import com.vaadin.flow.theme.Theme;
 @PWA(name = "CE Demo", shortName = "CE Demo")
 @Push
 @Theme("ce-demo")
-@EnableScheduling
 public class Application extends SpringBootServletInitializer
         implements AppShellConfigurator, VaadinServiceInitListener {
 
