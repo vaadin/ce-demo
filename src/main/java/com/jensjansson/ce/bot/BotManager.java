@@ -76,14 +76,16 @@ public class BotManager implements Runnable {
 
     @Override
     public synchronized void run() {
+        boolean initialized = false;
+        while (!initialized) {
+            doWait(1000);
+            initialized = initializeIfPossible();
+        }
 
         for (int i = 0; true; i = (i + 1) % botCount) {
             createPresence(i);
-            try {
-                wait(random.nextInt(1000) + 1000);
-            } catch (InterruptedException e) {
-                logger.error("Thread interrupted", e);
-            }
+            doWait(random.nextInt(1000) + 1000);
+
             logger.debug("Running bots");
             botMap.values().stream().filter(b -> !b.shouldStop)
                 .collect(Collectors.toList()).forEach(bot -> {
@@ -96,6 +98,14 @@ public class BotManager implements Runnable {
         }
     }
 
+    private void doWait(int milliseconds) {
+        try {
+            wait(milliseconds);
+        } catch (InterruptedException e) {
+            logger.error("Thread interrupted", e);
+        }
+    }
+
     private List<UserInfo> createBotUsers() {
         return IntStream.range(0, botCount).mapToObj(i -> {
             UserInfo bot = BotUserGenerator.generateBotUser(BOT_PREFIX);
@@ -105,16 +115,22 @@ public class BotManager implements Runnable {
         }).collect(Collectors.toList());
     }
 
-    private void createPresence(int i) {
-        if (ids.isEmpty()) {
-            ids = personService.findByQuery(null).stream().map(Person::getId)
-                .collect(Collectors.toList());
-            if (ids.isEmpty()) {
-                return;
-            }
-            fillPresenceObservers();
+    /**
+     * Fetch Person entities from the database and initialize if they are available.
+     * @return true if initialized
+     */
+    private boolean initializeIfPossible() {
+        this.ids = personService.findByQuery(null).stream().map(Person::getId)
+            .collect(Collectors.toList());
+        if (this.ids.isEmpty()) {
+            return false;
         }
-        String topic = createTopic(random.nextInt(25) + 1);
+        fillPresenceObservers();
+        return true;
+    }
+
+    private void createPresence(int i) {
+        String topic = createTopic(random.nextInt(40) + 1);
         PresenceManager previousPresenceManager = presenceManagers[i];
         if (previousPresenceManager != null && topic
             .equals(previousPresenceManager.getTopicId())) {
