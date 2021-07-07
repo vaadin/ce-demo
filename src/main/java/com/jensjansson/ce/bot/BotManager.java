@@ -36,7 +36,7 @@ public class BotManager implements Runnable {
     private static final Logger logger = LoggerFactory
         .getLogger(BotManager.class);
 
-    private static final int botCount = 5;
+    private static final int botCount = 20;
     private static final int maxAvatarNumber = 8;
     private static BotManager instance;
 
