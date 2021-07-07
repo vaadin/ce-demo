@@ -81,6 +81,8 @@ public class BotManager implements Runnable {
             doWait(1000);
             initialized = initializeIfPossible();
         }
+        IntStream.range(0,botCount).forEach(this::createPresence);
+        doWait(10000);
 
         for (int i = 0; true; i = (i + 1) % botCount) {
             createPresence(i);
@@ -109,8 +111,9 @@ public class BotManager implements Runnable {
     private List<UserInfo> createBotUsers() {
         return IntStream.range(0, botCount).mapToObj(i -> {
             UserInfo bot = BotUserGenerator.generateBotUser(BOT_PREFIX);
-            bot.setImage(
-                String.format("images/avatars/%d.png", maxAvatarNumber - i));
+            String image = String
+                .format("images/avatars/%d.png", (i % maxAvatarNumber) + 1);
+            bot.setImage(image);
             return bot;
         }).collect(Collectors.toList());
     }
