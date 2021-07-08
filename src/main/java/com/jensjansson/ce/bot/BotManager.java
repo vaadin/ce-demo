@@ -336,7 +336,7 @@ public class BotManager implements Runnable {
         }
     }
 
-    class ExtraBot {
+    static class ExtraBot {
        private UserInfo userInfo;
        private PresenceManager presenceManager;
 
