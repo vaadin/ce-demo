@@ -98,7 +98,6 @@ public class BotManager implements Runnable {
 
             doWait(500);
 
-            logger.debug("Running bots");
             botMap.values().stream().filter(b -> !b.shouldStop)
                 .collect(Collectors.toList()).forEach(bot -> {
                 try {
