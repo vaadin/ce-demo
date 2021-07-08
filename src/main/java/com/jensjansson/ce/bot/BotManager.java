@@ -263,7 +263,7 @@ public class BotManager implements Runnable {
     }
 
     class Bot implements Runnable {
-        private final int delayInSeconds = 4;
+        private final int delayInSeconds = 2;
 
         UserInfo user;
         volatile TopicConnection topic;
@@ -273,7 +273,7 @@ public class BotManager implements Runnable {
 
         int saveAfter = generateNumberOfEditsBeforeSave();
         int editCounter = 0;
-        Instant lastExecution = Instant.now().minusSeconds(delayInSeconds);
+        Instant lastExecution = null;
         ListIterator<Runnable> currentEditSteps;
 
         Bot(String topicId, UserInfo user, Person person) {
@@ -298,8 +298,8 @@ public class BotManager implements Runnable {
             if (topicRegistration == null || shouldStop) {
                 return; // Not connected yet or stopped
             }
-            boolean shouldWait = lastExecution.plusSeconds(delayInSeconds)
-                    .compareTo(Instant.now()) < 0;
+            boolean shouldWait = lastExecution != null && lastExecution.plusSeconds(delayInSeconds)
+                .isAfter(Instant.now());
             if (shouldWait) {
                 return; // Wait until enough time has passed between edits
             }
@@ -340,7 +340,7 @@ public class BotManager implements Runnable {
        private UserInfo userInfo;
        private PresenceManager presenceManager;
 
-        public ExtraBot(UserInfo userInfo) {
+       public ExtraBot(UserInfo userInfo) {
             this.userInfo = userInfo;
         }
     }
