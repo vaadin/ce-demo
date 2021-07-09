@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.jensjansson.ce.bot.BotRunner;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
 
@@ -250,7 +249,6 @@ public class EditorView extends Div {
             expirationRegistration.remove();
         }
         if (topicId != null) {
-            BotRunner.onUserJoined(topicId, localUser, person, personService);
             expirationRegistration = CollaborationEngine.getInstance()
                     .openTopicConnection(this, topicId, localUser,
                             topicConnection -> {

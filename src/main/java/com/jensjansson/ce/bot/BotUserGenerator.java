@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.vaadin.collaborationengine.UserInfo;
 
-class BotUserGenerator {
+public class BotUserGenerator {
 
     static final String BOT_ID_PREFIX = "bot-";
 
@@ -16,9 +16,13 @@ class BotUserGenerator {
 
     private static AtomicInteger counter = new AtomicInteger(0);
 
-    static UserInfo generateBotUser() {
+    public static UserInfo generateBotUser() {
+       return generateBotUser(BOT_ID_PREFIX);
+    }
+
+    public static UserInfo generateBotUser(String prefix) {
         UserInfo user = new UserInfo(
-                BOT_ID_PREFIX + UUID.randomUUID().toString());
+                prefix + UUID.randomUUID().toString());
         user.setName("Bot " + names.get(counter.getAndUpdate(oldValue -> {
             if (oldValue < names.size() - 1) {
                 return oldValue + 1;

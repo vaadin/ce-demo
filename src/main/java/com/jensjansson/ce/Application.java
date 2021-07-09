@@ -1,10 +1,14 @@
 package com.jensjansson.ce;
 
+import com.jensjansson.ce.bot.BotManager;
+import com.jensjansson.ce.data.service.PersonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.vaadin.collaborationengine.CollaborationEngine;
 import com.vaadin.collaborationengine.CollaborationEngineConfiguration;
@@ -33,6 +37,9 @@ public class Application extends SpringBootServletInitializer
         SpringApplication.run(Application.class, args);
     }
 
+    @Autowired
+    PersonService personService;
+
     @Override
     public void serviceInit(ServiceInitEvent serviceInitEvent) {
         LicenseEventHandler licenseEventHandler = licenseEvent -> {
@@ -52,7 +59,9 @@ public class Application extends SpringBootServletInitializer
         };
         CollaborationEngineConfiguration configuration = new CollaborationEngineConfiguration(
                 licenseEventHandler);
-        CollaborationEngine.configure(serviceInitEvent.getSource(),
+        CollaborationEngine ce = CollaborationEngine.configure(serviceInitEvent.getSource(),
                 configuration);
+
+        BotManager.createInstance(personService, ce);
     }
 }

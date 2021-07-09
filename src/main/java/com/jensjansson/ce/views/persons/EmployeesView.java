@@ -167,7 +167,9 @@ public class EmployeesView extends Div {
     }
 
     private PresenceComponent createPresenceComponent(Person person) {
-        return new PresenceComponent(localUser, getTopicId(person), person);
+        String topicId = getTopicId(person);
+        PresenceComponent component = new PresenceComponent(localUser, topicId);
+        return component;
     }
 
     private Component createContactInfo(Person person) {
@@ -193,10 +195,10 @@ public class EmployeesView extends Div {
         return edit;
     }
 
-    private String getTopicId(Person person) {
+    public static String getTopicId(Person person) {
         String topicId = null;
         if (person != null && person.getId() != null) {
-            topicId = "person/" + String.valueOf(person.getId());
+            topicId = "person/" + person.getId();
         }
         return topicId;
     }
@@ -211,13 +213,12 @@ public class EmployeesView extends Div {
 
 class PresenceComponent extends AvatarGroup {
 
-    public PresenceComponent(UserInfo localUser, String topicId, Person person) {
+    public PresenceComponent(UserInfo localUser, String topicId) {
         Objects.requireNonNull(localUser);
         Objects.requireNonNull(topicId);
-        Objects.requireNonNull(person);
         PresenceManager presenceManager = new PresenceManager(this,
             localUser, topicId);
-        presenceManager.setAutoPresence(false);
+        presenceManager.markAsPresent(false);
 
         presenceManager.setNewUserHandler(e -> {
             String description = String
@@ -229,5 +230,7 @@ class PresenceComponent extends AvatarGroup {
             add(item);
             return () -> remove(item);
         });
+        addAttachListener( e -> System.out.println("Attached to " + topicId));
+        addDetachListener( e -> System.out.println("Detached from" + topicId));
     }
 }
