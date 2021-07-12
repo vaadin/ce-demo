@@ -28,11 +28,16 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Route(value = "employees", layout = MainView.class)
 @PageTitle("Employees")
@@ -168,8 +173,7 @@ public class EmployeesView extends Div {
 
     private PresenceComponent createPresenceComponent(Person person) {
         String topicId = getTopicId(person);
-        PresenceComponent component = new PresenceComponent(localUser, topicId);
-        return component;
+        return new PresenceComponent(localUser, topicId);
     }
 
     private Component createContactInfo(Person person) {
@@ -188,9 +192,7 @@ public class EmployeesView extends Div {
 
 
     private Component createEditButton(Person person) {
-        Button edit = new Button(null, VaadinIcon.EDIT.create(), click -> {
-            editPerson(person);
-        });
+        Button edit = new Button(null, VaadinIcon.EDIT.create(), click -> editPerson(person));
         edit.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         return edit;
     }
@@ -213,6 +215,9 @@ public class EmployeesView extends Div {
 
 class PresenceComponent extends AvatarGroup {
 
+    private static final Logger logger = LoggerFactory
+        .getLogger(PresenceComponent.class);
+
     public PresenceComponent(UserInfo localUser, String topicId) {
         Objects.requireNonNull(localUser);
         Objects.requireNonNull(topicId);
@@ -227,10 +232,16 @@ class PresenceComponent extends AvatarGroup {
                 e.getImage());
             item.setColorIndex(
                 CollaborationEngine.getInstance().getUserColorIndex(e));
-            add(item);
+            if (Objects.equals(localUser.getId(),e.getId())) {
+                // Set the local user as the first item.
+                setItems(Stream.concat(Stream.of(item), getItems().stream()).collect(
+                    Collectors.toList()));
+            } else {
+                add(item);
+            }
             return () -> remove(item);
         });
-        addAttachListener( e -> System.out.println("Attached to " + topicId));
-        addDetachListener( e -> System.out.println("Detached from" + topicId));
+        addAttachListener( e -> logger.debug("Attached to " + topicId));
+        addDetachListener( e -> logger.debug("Detached from" + topicId));
     }
 }
