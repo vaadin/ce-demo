@@ -97,7 +97,7 @@ public class EmployeesView extends Div {
         grid = new Grid<>();
         grid.removeAllColumns();
         grid.addColumn(new ComponentRenderer<>(this::createAvatar))
-                .setAutoWidth(true).setFlexGrow(0);
+                .setWidth("4.5em").setFlexGrow(0);
         grid.addColumn(new ComponentRenderer<>(this::createOwnerInfo))
                 .setFlexGrow(2);
         grid.addColumn(new ComponentRenderer<>(this::createTeamInfo))
