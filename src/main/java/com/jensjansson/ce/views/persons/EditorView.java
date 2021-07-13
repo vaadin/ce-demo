@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.jensjansson.ce.bot.BotRunner;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
 
@@ -70,7 +69,6 @@ public class EditorView extends Div {
 
     private CollaborationAvatarGroup avatarGroup;
     private UserInfo localUser;
-    private PersonService personService;
     private EditorActionNotifier editorActionNotifier;
     private CollaborationBinder<Person> binder;
 
@@ -83,7 +81,6 @@ public class EditorView extends Div {
     public EditorView(UserInfo localUser, PersonService personService,
             EditorActionNotifier editorActionNotifier) {
         this.localUser = localUser;
-        this.personService = personService;
         this.editorActionNotifier = editorActionNotifier;
 
         addClassNames("editor-view", "flex", "flex-col");
@@ -240,13 +237,9 @@ public class EditorView extends Div {
         return comments;
     }
 
-    protected void editPerson(Person person) {
+    protected void editPerson(Person person, String topicId) {
         this.person = person;
-        // Value can be null as well, that clears the form
-        String topicId = null;
-        if (person != null && person.getId() != null) {
-            topicId = "person/" + String.valueOf(person.getId());
-        }
+        //  A null topicId clears the form
         binder.setTopic(topicId, () -> person);
         avatarGroup.setTopic(topicId);
         list.setTopic(topicId);
@@ -254,7 +247,6 @@ public class EditorView extends Div {
             expirationRegistration.remove();
         }
         if (topicId != null) {
-            BotRunner.onUserJoined(topicId, localUser, person, personService);
             expirationRegistration = CollaborationEngine.getInstance()
                     .openTopicConnection(this, topicId, localUser,
                             topicConnection -> {

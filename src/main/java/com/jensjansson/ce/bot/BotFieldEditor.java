@@ -1,21 +1,21 @@
 package com.jensjansson.ce.bot;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.jensjansson.ce.data.entity.Person;
-import com.jensjansson.ce.data.generator.DataGenerator;
-import com.jensjansson.ce.views.persons.EditorView;
-import org.apache.logging.log4j.util.Supplier;
 
 import com.vaadin.collaborationengine.CollaborationBinder;
 import com.vaadin.collaborationengine.CollaborationBinderUtil;
 import com.vaadin.collaborationengine.TopicConnection;
 import com.vaadin.collaborationengine.UserInfo;
 
-import static com.jensjansson.ce.bot.BotRunner.sleepRandom;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.jensjansson.ce.data.entity.Person;
+import com.jensjansson.ce.data.generator.DataGenerator;
+import com.jensjansson.ce.views.persons.EditorView;
+import org.apache.logging.log4j.util.Supplier;
 
 class BotFieldEditor {
 
@@ -31,35 +31,37 @@ class BotFieldEditor {
                 () -> getRandomEntry(EditorView.HAPPINESS_VALUES));
     }
 
-    static void editRandomField(TopicConnection topic, UserInfo user) {
+    static List<Runnable> editRandomField(TopicConnection topic,
+        UserInfo user) {
 
+        List<Runnable> result = new ArrayList<>();
         String propertyName = getRandomEntry(fieldToValueProvider.keySet());
 
         Object value = fieldToValueProvider.get(propertyName).get();
 
-        sleepRandom(1, 3);
-
         if (propertyName.equals("happiness")) {
-            CollaborationBinderUtil.addEditor(topic, propertyName, user,
+            result.add(() -> {
+                CollaborationBinderUtil.addEditor(topic, propertyName, user,
                     EditorView.HAPPINESS_VALUES.indexOf(value));
-            // RadioButtonGroup changes the value immediately when
-            CollaborationBinderUtil.setFieldValue(topic, propertyName, value);
-            sleepRandom(3, 5);
+                // RadioButtonGroup changes the value immediately when
+                CollaborationBinderUtil
+                    .setFieldValue(topic, propertyName, value);
+            });
         } else {
-            CollaborationBinderUtil.addEditor(topic, propertyName, user);
+            result.add(() -> CollaborationBinderUtil
+                .addEditor(topic, propertyName, user));
 
-            sleepRandom(3, 5);
-
-            // Skip changing the value if there's another focused user
-            if (getEditorCount(topic, propertyName) < 2) {
-                CollaborationBinderUtil.setFieldValue(topic, propertyName,
-                        value);
-                sleepRandom(0, 2);
-            }
+            result.add(() -> {
+                // Skip changing the value if there's another focused user
+                if (getEditorCount(topic, propertyName) < 2) {
+                    CollaborationBinderUtil
+                        .setFieldValue(topic, propertyName, value);
+                }
+            });
         }
 
-        CollaborationBinderUtil.removeEditor(topic, propertyName, user);
-
+        result.add(() -> CollaborationBinderUtil.removeEditor(topic, propertyName, user));
+        return result;
     }
 
     private static Person generatePerson() {
