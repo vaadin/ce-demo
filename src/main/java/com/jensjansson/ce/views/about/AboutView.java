@@ -40,6 +40,10 @@ public class AboutView extends FlexLayout {
               "<p>" +
                 "To learn more about the Collaboration Engine, visit <a href=\"https://vaadin.com/collaboration\" target=\"_blank\">the Vaadin web site</a>." +
               "</p>" +
+              "<h3>Feedback</h3>" +
+              "<p>" +
+                "Do you have any feedback about Collaboration Engine or another topic? We'd love to hear from you! <a href=\"https://vaad.in/feedback\" target=\"_blank\">Leave us a message</a>." +
+              "</p>" +
             "</div>";
         //@formatter:on
 
