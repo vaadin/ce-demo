@@ -1,18 +1,16 @@
 package com.jensjansson.ce.views.persons;
 
-import java.util.UUID;
-
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
 import com.jensjansson.ce.views.main.MainView;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-
 import com.vaadin.collaborationengine.CollaborationEngine;
 import com.vaadin.collaborationengine.CollaborationMap;
+import com.vaadin.collaborationengine.PresenceManager;
+import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.component.avatar.AvatarGroup;
 import com.vaadin.flow.component.avatar.AvatarVariant;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -31,6 +29,16 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 @Route(value = "employees", layout = MainView.class)
 @PageTitle("Employees")
 public class EmployeesView extends Div {
@@ -43,11 +51,14 @@ public class EmployeesView extends Div {
 
     private final Dialog dialog;
 
+    private final UserInfo localUser;
+
     public EmployeesView(@Autowired PersonService personService,
             MainView mainView) {
         setSizeFull();
+        this.localUser = mainView.getLocalUser();
 
-        editorView = new EditorView(mainView.getLocalUser(), personService,
+        editorView = new EditorView(localUser, personService,
                 new EditorView.EditorActionNotifier() {
                     @Override
                     public void updateGrid(Person person) {
@@ -81,7 +92,7 @@ public class EmployeesView extends Div {
         dialog.addThemeVariants(DialogVariant.LUMO_NO_PADDING);
 
         dialog.addDialogCloseActionListener(event -> {
-            editorView.editPerson(null);
+            editorView.editPerson(null, null);
             dialog.close();
         });
 
@@ -91,13 +102,15 @@ public class EmployeesView extends Div {
         grid = new Grid<>();
         grid.removeAllColumns();
         grid.addColumn(new ComponentRenderer<>(this::createAvatar))
-                .setAutoWidth(true).setFlexGrow(0);
+                .setWidth("4.5em").setFlexGrow(0);
         grid.addColumn(new ComponentRenderer<>(this::createOwnerInfo))
                 .setFlexGrow(2);
         grid.addColumn(new ComponentRenderer<>(this::createTeamInfo))
                 .setFlexGrow(1);
         grid.addColumn(new ComponentRenderer<>(this::createContactInfo))
                 .setFlexGrow(2);
+        grid.addColumn(new ComponentRenderer<>(this::createPresenceComponent))
+            .setFlexGrow(1);
         grid.addColumn(new ComponentRenderer<>(this::createEditButton))
                 .setWidth("5em").setFlexGrow(0)
                 .setTextAlign(ColumnTextAlign.END);
@@ -158,6 +171,11 @@ public class EmployeesView extends Div {
         return layout;
     }
 
+    private PresenceComponent createPresenceComponent(Person person) {
+        String topicId = getTopicId(person);
+        return new PresenceComponent(localUser, topicId);
+    }
+
     private Component createContactInfo(Person person) {
         Span email = new Span(
                 new Text(person.getEmail() != null ? person.getEmail() : ""));
@@ -172,18 +190,58 @@ public class EmployeesView extends Div {
         return layout;
     }
 
+
     private Component createEditButton(Person person) {
-        Button edit = new Button(null, VaadinIcon.EDIT.create(), click -> {
-            editPerson(person);
-        });
+        Button edit = new Button(null, VaadinIcon.EDIT.create(), click -> editPerson(person));
         edit.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         return edit;
     }
 
+    public static String getTopicId(Person person) {
+        String topicId = null;
+        if (person != null && person.getId() != null) {
+            topicId = "person/" + person.getId();
+        }
+        return topicId;
+    }
+
     private void editPerson(Person person) {
-        editorView.editPerson(person);
+        editorView.editPerson(person, getTopicId(person));
         if (person != null) {
             dialog.open();
         }
+    }
+}
+
+class PresenceComponent extends AvatarGroup {
+
+    private static final Logger logger = LoggerFactory
+        .getLogger(PresenceComponent.class);
+
+    public PresenceComponent(UserInfo localUser, String topicId) {
+        Objects.requireNonNull(localUser);
+        Objects.requireNonNull(topicId);
+        PresenceManager presenceManager = new PresenceManager(this,
+            localUser, topicId);
+        presenceManager.markAsPresent(false);
+
+        presenceManager.setNewUserHandler(e -> {
+            String description = String
+                .format("%s is editing this row", e.getName());
+            AvatarGroupItem item = new AvatarGroupItem(description,
+                e.getImage());
+            item.setColorIndex(
+                CollaborationEngine.getInstance().getUserColorIndex(e));
+            if (Objects.equals(localUser.getId(),e.getId())) {
+                // Set the local user as the first item.
+                setItems(Stream.concat(Stream.of(item), getItems().stream()).collect(
+                    Collectors.toList()));
+            } else {
+                add(item);
+            }
+            return () -> remove(item);
+        });
+        addAttachListener( e -> logger.debug("Attached to " + topicId));
+        addDetachListener( e -> logger.debug("Detached from" + topicId));
     }
 }
