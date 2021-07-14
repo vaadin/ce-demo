@@ -20,12 +20,6 @@ class BotSaver {
             Person person, PersonService personService, UserInfo user) {
         getPersonFromFields(person, personTopic);
         personService.update(person);
-        ce.openTopicConnection(new EagerConnectionContext(), "refreshGrid",
-                user, topic -> {
-                    topic.getNamedMap("refreshGrid").put("refreshGrid",
-                            UUID.randomUUID().toString());
-                    return null;
-                });
         EditorView.sendSaveNotification(personTopic.getNamedMap("save"), user);
     }
 
