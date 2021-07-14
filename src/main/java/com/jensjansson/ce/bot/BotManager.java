@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.vaadin.collaborationengine.CollaborationEngine;
+import com.vaadin.collaborationengine.CollaborationMap;
 import com.vaadin.collaborationengine.ConnectionContext;
 import com.vaadin.collaborationengine.NewUserHandler;
 import com.vaadin.collaborationengine.PresenceManager;
@@ -43,6 +44,7 @@ public class BotManager implements Runnable {
     private static final int maxAvatarNumber = 8;
     private static BotManager instance;
 
+    private final EagerConnectionContext connectionContext = new EagerConnectionContext();
     private PersonService personService;
     private CollaborationEngine ce;
     private List<Integer> ids = Collections.emptyList();
@@ -52,6 +54,7 @@ public class BotManager implements Runnable {
     private BiFunction<UserInfo, String, PresenceManager> presenceManagerCreator;
     private Map<Integer,UserHandler> handlerMap;
     private ConcurrentHashMap<Integer, Bot> botMap = new ConcurrentHashMap<>();
+    private CollaborationMap refreshGridMap;
 
     BotManager(PersonService personService, CollaborationEngine ce) {
         this.personService = personService;
@@ -60,6 +63,12 @@ public class BotManager implements Runnable {
         this.extraBots = createBotUsers(5).stream().map(ExtraBot::new).collect(
             Collectors.toList());
         this.presenceManagerCreator = createPresenceManagerCreator();
+
+        ce.openTopicConnection(connectionContext,
+            "refreshGrid", createBotUsers(1).get(0), topicConnection -> {
+                refreshGridMap = topicConnection.getNamedMap("refreshGrid");
+                return () -> refreshGridMap = null;
+            });
     }
 
     public static void createInstance(PersonService personService,
@@ -170,7 +179,7 @@ public class BotManager implements Runnable {
         return (bot, topic) -> {
             try {
                 PresenceManager manager = constructor
-                    .newInstance(new EagerConnectionContext(), bot, topic, ce);
+                    .newInstance(connectionContext, bot, topic, ce);
                 manager.markAsPresent(true);
                 return manager;
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
@@ -306,6 +315,7 @@ public class BotManager implements Runnable {
             if (editCounter >= saveAfter) {
                 log("Called save");
                 BotSaver.save(ce, topic, person, personService, user);
+                refreshGridMap.put(String.valueOf(person.getId()), person);
 
                 editCounter = 0;
                 saveAfter = generateNumberOfEditsBeforeSave();

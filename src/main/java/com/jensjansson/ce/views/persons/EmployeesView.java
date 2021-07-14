@@ -1,8 +1,9 @@
 package com.jensjansson.ce.views.persons;
 
-import com.jensjansson.ce.data.entity.Person;
-import com.jensjansson.ce.data.service.PersonService;
-import com.jensjansson.ce.views.main.MainView;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import com.vaadin.collaborationengine.CollaborationEngine;
 import com.vaadin.collaborationengine.CollaborationMap;
 import com.vaadin.collaborationengine.PresenceManager;
@@ -25,19 +26,19 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.renderer.TemplateRenderer;
+import com.vaadin.flow.function.ValueProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
+import com.jensjansson.ce.data.entity.Person;
+import com.jensjansson.ce.data.service.PersonService;
+import com.jensjansson.ce.views.main.MainView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
-
-import java.util.Objects;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Route(value = "employees", layout = MainView.class)
 @PageTitle("Employees")
@@ -62,10 +63,9 @@ public class EmployeesView extends Div {
                 new EditorView.EditorActionNotifier() {
                     @Override
                     public void updateGrid(Person person) {
-                        grid.getDataProvider().refreshAll();
+                        grid.getDataProvider().refreshItem(person);
                         if (refreshGridMap != null) {
-                            refreshGridMap.put("refreshGrid",
-                                    UUID.randomUUID().toString());
+                            refreshGridMap.put(String.valueOf(person.getId()),person);
                         }
                         dialog.close();
                     }
@@ -101,19 +101,16 @@ public class EmployeesView extends Div {
 
         grid = new Grid<>();
         grid.removeAllColumns();
-        grid.addColumn(new ComponentRenderer<>(this::createAvatar))
-                .setWidth("4.5em").setFlexGrow(0);
-        grid.addColumn(new ComponentRenderer<>(this::createOwnerInfo))
-                .setFlexGrow(2);
-        grid.addColumn(new ComponentRenderer<>(this::createTeamInfo))
-                .setFlexGrow(1);
-        grid.addColumn(new ComponentRenderer<>(this::createContactInfo))
-                .setFlexGrow(2);
+        grid.addColumn(createAvatarRenderer()).setFlexGrow(0);
+        grid.addColumn(createOwnerInfoRenderer()).setFlexGrow(2);
+        grid.addColumn(createTeamInfoRenderer()).setFlexGrow(1);
+        grid.addColumn(createContactInfoRenderer())
+            .setFlexGrow(2);
         grid.addColumn(new ComponentRenderer<>(this::createPresenceComponent))
             .setFlexGrow(1);
-        grid.addColumn(new ComponentRenderer<>(this::createEditButton))
-                .setWidth("5em").setFlexGrow(0)
-                .setTextAlign(ColumnTextAlign.END);
+        grid.addColumn(createEditButtonRenderer())
+            .setWidth("5em").setFlexGrow(0)
+            .setTextAlign(ColumnTextAlign.END);
 
         grid.setItems(
                 query -> personService
@@ -129,72 +126,77 @@ public class EmployeesView extends Div {
 
         add(grid);
 
+
         CollaborationEngine.getInstance().openTopicConnection(this,
                 "refreshGrid", mainView.getLocalUser(), topicConnection -> {
                     refreshGridMap = topicConnection.getNamedMap("refreshGrid");
-                    refreshGridMap.subscribe(
-                            e -> grid.getDataProvider().refreshAll());
-                    return () -> refreshGridMap = null;
+                refreshGridMap.subscribe(e -> grid.getDataProvider()
+                    .refreshItem(e.getValue(Person.class)));
+                return () -> refreshGridMap = null;
                 });
+
     }
 
-    private Component createAvatar(Person person) {
-        Avatar avatar = new Avatar(
-                person.getFirstName() + " " + person.getLastName(),
-                person.getAvatar());
-        avatar.addClassName("mt-xs");
-        avatar.addThemeVariants(AvatarVariant.LUMO_LARGE);
-        return avatar;
+    private TemplateRenderer<Person> createAvatarRenderer() {
+        final String value = "<vaadin-avatar"
+            + " class=\"mt-xs\""
+            + " theme=\"large\""
+            + " img=[[item.img]]"
+            + " name=[[item.name]]"
+            + "></vaadin-avatar>";
+        return TemplateRenderer.<Person>of(value)
+            .withProperty("img", Person::getAvatar)
+            .withProperty("name", Person::getFullName);
     }
 
-    private Component createOwnerInfo(Person person) {
-        Span name = new Span(
-                new Text(person.getFirstName() + " " + person.getLastName()));
-        name.addClassNames("font-semibold text-l");
-        Span title = new Span(
-                new Text(person.getTitle() != null ? person.getTitle() : ""));
-        title.addClassNames("text-s", "text-secondary");
-        Div layout = new Div(name, title);
-        layout.addClassNames("leading-m", "py-s", "flex", "flex-col");
-        return layout;
+    private ValueProvider<Person, String> getEmptyIfNull(ValueProvider<Person, String> provider) {
+        return person -> {
+            String value = provider.apply(person);
+            return value != null ? value : "";
+        };
     }
 
-    private Component createTeamInfo(Person person) {
-        Span department = new Span(new Text(
-                person.getDepartment() != null ? person.getDepartment() : ""));
-        Span team = new Span(
-                new Text(person.getTeam() != null ? person.getTeam() : ""));
-        team.addClassNames("text-s");
-        Div layout = new Div(department, team);
-        layout.addClassNames("leading-m", "py-s", "flex", "flex-col",
-                "text-secondary");
-        return layout;
+    private TemplateRenderer<Person> createOwnerInfoRenderer() {
+        String template = "<div class=\"leading-m py-s flex flex-col\">"
+            + "<span class=\"font-semibold text-l\">[[item.name]]</span>"
+            + "<span class=\"text-s text-secondary\">[[item.title]]</span></div>";
+        return TemplateRenderer.<Person>of(template)
+            .withProperty("name", Person::getFullName)
+            .withProperty("title", getEmptyIfNull(Person::getTitle));
     }
 
-    private PresenceComponent createPresenceComponent(Person person) {
+    private TemplateRenderer<Person> createTeamInfoRenderer() {
+        String template = "<div class=\"leading-m py-s flex flex-col text-secondary\">"
+            + "<span>[[item.department]]</span>"
+            + "<span class=\"text-s\">[[item.team]]</span>"
+            + "</div>";
+        return TemplateRenderer.<Person>of(template)
+            .withProperty("department", getEmptyIfNull(Person::getDepartment))
+            .withProperty("team", getEmptyIfNull(Person::getTeam));
+    }
+
+   private PresenceComponent createPresenceComponent(Person person) {
         String topicId = getTopicId(person);
         return new PresenceComponent(localUser, topicId);
     }
 
-    private Component createContactInfo(Person person) {
-        Span email = new Span(
-                new Text(person.getEmail() != null ? person.getEmail() : ""));
-
-        Span phone = new Span(new Text(
-                person.getPhoneNumber() != null ? person.getPhoneNumber()
-                        : ""));
-        phone.addClassNames("text-s");
-        Div layout = new Div(email, phone);
-        layout.addClassNames("leading-m", "py-s", "flex", "flex-col",
-                "text-secondary");
-        return layout;
+    private TemplateRenderer<Person> createContactInfoRenderer() {
+        String template = "<div class=\"leading-m py-s flex flex-col text-secondary\">"
+            + "<span>[[item.email]]</span>"
+            + "<span class=\"text-s\">[[item.phoneNumber]]</span>"
+            + "</div>";
+        return TemplateRenderer.<Person>of(template)
+            .withProperty("email", getEmptyIfNull(Person::getEmail))
+            .withProperty("phoneNumber", getEmptyIfNull(Person::getPhoneNumber));
     }
 
-
-    private Component createEditButton(Person person) {
-        Button edit = new Button(null, VaadinIcon.EDIT.create(), click -> editPerson(person));
-        edit.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        return edit;
+    private TemplateRenderer<Person> createEditButtonRenderer() {
+        String template =
+            "<vaadin-button theme=\"icon tertiary\" on-click=\"handleClick\" >"
+                + "<vaadin-icon icon=\"vaadin:edit\" slot=\"prefix\"></vaadin-icon>"
+                + "</vaadin-button>";
+        return TemplateRenderer.<Person>of(template)
+            .withEventHandler("handleClick", this::editPerson);
     }
 
     public static String getTopicId(Person person) {
