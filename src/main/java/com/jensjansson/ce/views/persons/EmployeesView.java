@@ -6,30 +6,25 @@ import java.util.stream.Stream;
 
 import com.vaadin.collaborationengine.CollaborationEngine;
 import com.vaadin.collaborationengine.CollaborationMap;
+import com.vaadin.collaborationengine.NewUserHandler;
 import com.vaadin.collaborationengine.PresenceManager;
 import com.vaadin.collaborationengine.UserInfo;
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Text;
-import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarGroup;
-import com.vaadin.flow.component.avatar.AvatarVariant;
-import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.dialog.DialogVariant;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.TemplateRenderer;
 import com.vaadin.flow.function.ValueProvider;
+import com.vaadin.flow.internal.StateTree;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 
 import com.jensjansson.ce.data.entity.Person;
@@ -215,35 +210,56 @@ public class EmployeesView extends Div {
     }
 }
 
-class PresenceComponent extends AvatarGroup {
+class PresenceComponent extends AvatarGroup implements NewUserHandler {
+
+    private final UserInfo localUser;
+    private PresenceManager presenceManager;
+    private StateTree.ExecutionRegistration registration;
 
     private static final Logger logger = LoggerFactory
         .getLogger(PresenceComponent.class);
 
     public PresenceComponent(UserInfo localUser, String topicId) {
-        Objects.requireNonNull(localUser);
+        this.localUser = Objects.requireNonNull(localUser);
         Objects.requireNonNull(topicId);
-        PresenceManager presenceManager = new PresenceManager(this,
-            localUser, topicId);
-        presenceManager.markAsPresent(false);
 
-        presenceManager.setNewUserHandler(e -> {
-            String description = String
-                .format("%s is editing this row", e.getName());
-            AvatarGroupItem item = new AvatarGroupItem(description,
-                e.getImage());
-            item.setColorIndex(
-                CollaborationEngine.getInstance().getUserColorIndex(e));
-            if (Objects.equals(localUser.getId(),e.getId())) {
-                // Set the local user as the first item.
-                setItems(Stream.concat(Stream.of(item), getItems().stream()).collect(
-                    Collectors.toList()));
-            } else {
-                add(item);
-            }
-            return () -> remove(item);
+        addAttachListener(e -> {
+            logger.debug("User {} attached to {}",localUser.getId(), topicId);
+            this.registration = e.getUI().beforeClientResponse(this, context -> {
+                this.presenceManager = new PresenceManager(this, localUser,
+                    topicId);
+                presenceManager.markAsPresent(false);
+                presenceManager.setNewUserHandler(this);
+            });
         });
-        addAttachListener( e -> logger.debug("Attached to " + topicId));
-        addDetachListener( e -> logger.debug("Detached from" + topicId));
+        addDetachListener(e -> {
+            logger.debug("User {} detached from {}",localUser.getId(), topicId);
+            if(this.presenceManager != null) {
+                presenceManager.close();
+            }
+            if(this.registration != null) {
+                this.registration.remove();
+                this.registration = null;
+            }
+        });
+    }
+
+    @Override
+    public Registration handleNewUser(UserInfo user) {
+
+        String description = String
+            .format("%s is editing this row", user.getName());
+        AvatarGroupItem item = new AvatarGroupItem(description,
+            user.getImage());
+        item.setColorIndex(
+            CollaborationEngine.getInstance().getUserColorIndex(user));
+        if (Objects.equals(localUser.getId(),user.getId())) {
+            // Set the local user as the first item.
+            setItems(Stream.concat(Stream.of(item), getItems().stream()).collect(
+                Collectors.toList()));
+        } else {
+            add(item);
+        }
+        return () -> remove(item);
     }
 }
