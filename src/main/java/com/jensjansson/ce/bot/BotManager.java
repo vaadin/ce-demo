@@ -300,7 +300,7 @@ public class BotManager implements Runnable {
             boolean shouldWait = lastExecution != null && lastExecution.plusSeconds(delayInSeconds)
                 .isAfter(Instant.now());
             if (shouldWait) {
-                return; // Wait until enough time has passed between edits
+                //return; // Wait until enough time has passed between edits
             }
             lastExecution = Instant.now();
             if (editCounter >= saveAfter) {
@@ -308,7 +308,8 @@ public class BotManager implements Runnable {
                 BotSaver.save(ce, topic, person, personService, user);
 
                 editCounter = 0;
-                saveAfter = generateNumberOfEditsBeforeSave();
+                //saveAfter = generateNumberOfEditsBeforeSave();
+                saveAfter = 1;
                 currentEditSteps = null;
             } else if (currentEditSteps != null && currentEditSteps.hasNext()) {
                 currentEditSteps.next().run();

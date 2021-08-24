@@ -95,6 +95,11 @@
             <artifactId>a-vaadin-helper</artifactId>
             <version>1.6.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>collaboration-engine</artifactId>
+            <version>3.2-SNAPSHOT</version>
+        </dependency>
         <!-- TODO: should this be deleted? It is not in newer starters. -->
         <dependency>
             <groupId>org.vaadin.artur.exampledata</groupId>
