@@ -95,6 +95,9 @@
             <artifactId>a-vaadin-helper</artifactId>
             <version>1.6.0</version>
         </dependency>
+        <!--
+            TODO: 3.2.1 contains the fix for a memory leak.
+            This can be removed after updating to 21.0.2 -->
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>collaboration-engine</artifactId>
