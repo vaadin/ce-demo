@@ -15,7 +15,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8
         </project.reporting.outputEncoding>
-        <vaadin.version>21.0.0.alpha10</vaadin.version>
+        <vaadin.version>21.0.1</vaadin.version>
     </properties>
 
     <parent>
@@ -94,6 +94,11 @@
             <groupId>org.vaadin.artur</groupId>
             <artifactId>a-vaadin-helper</artifactId>
             <version>1.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>collaboration-engine</artifactId>
+            <version>3.2.1</version>
         </dependency>
         <!-- TODO: should this be deleted? It is not in newer starters. -->
         <dependency>
