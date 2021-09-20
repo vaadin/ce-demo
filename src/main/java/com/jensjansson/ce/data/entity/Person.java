@@ -1,7 +1,9 @@
 package com.jensjansson.ce.data.entity;
 
 import javax.persistence.Entity;
+import javax.persistence.Transient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jensjansson.ce.data.AbstractEntity;
 
 @Entity
@@ -95,5 +97,11 @@ public class Person extends AbstractEntity {
 
     public void setHappiness(String happiness) {
         this.happiness = happiness;
+    }
+
+    @Transient
+    @JsonIgnore
+    public String getFullName() {
+       return getFirstName() + " " + getLastName();
     }
 }

@@ -69,6 +69,7 @@ public class EditorView extends Div {
 
     private CollaborationAvatarGroup avatarGroup;
     private UserInfo localUser;
+    private PersonService personService;
     private EditorActionNotifier editorActionNotifier;
     private CollaborationBinder<Person> binder;
 
@@ -81,6 +82,7 @@ public class EditorView extends Div {
     public EditorView(UserInfo localUser, PersonService personService,
             EditorActionNotifier editorActionNotifier) {
         this.localUser = localUser;
+        this.personService = personService;
         this.editorActionNotifier = editorActionNotifier;
 
         addClassNames("editor-view", "flex", "flex-col");
