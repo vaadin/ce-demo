@@ -15,6 +15,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8
         </project.reporting.outputEncoding>
+        <!--
+        TODO collaboration-engine 3.2.1 contains the fix for a memory leak.
+        The overridden dependency can be removed after updating to 21.0.2+
+        -->
         <vaadin.version>21.0.1</vaadin.version>
     </properties>
 
@@ -95,6 +99,9 @@
             <artifactId>a-vaadin-helper</artifactId>
             <version>1.6.0</version>
         </dependency>
+        <!--
+            TODO: Remove this dependency.
+        -->
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>collaboration-engine</artifactId>
