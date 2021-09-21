@@ -67,16 +67,19 @@ public class EmployeesView extends Div {
                         if (refreshGridMap != null) {
                             refreshGridMap.put(String.valueOf(person.getId()),person);
                         }
+                        editorView.editPerson(null, null);
                         dialog.close();
                     }
 
                     @Override
                     public void stopEditingPerson() {
+                        editorView.editPerson(null, null);
                         dialog.close();
                     }
 
                     @Override
                     public void deletePerson() {
+                        editorView.editPerson(null, null);
                         dialog.close();
                         Notification notification = new Notification(
                                 "Delete has been disabled for demo purposes.");
