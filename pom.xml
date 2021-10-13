@@ -16,10 +16,12 @@
         <project.reporting.outputEncoding>UTF-8
         </project.reporting.outputEncoding>
         <!--
-        TODO collaboration-engine 3.2.1 contains the fix for a memory leak.
-        The overridden dependency can be removed after updating to 21.0.2+
+		TODO collaboration-engine 3.2.2 contains the fix for
+		CollaborationAvatarGroup in dialog issue.
+		The overridden dependency can be removed after
+		updating to 21.0.3+.
         -->
-        <vaadin.version>21.0.1</vaadin.version>
+        <vaadin.version>21.0.2</vaadin.version>
     </properties>
 
     <parent>
@@ -105,7 +107,7 @@
         <dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>collaboration-engine</artifactId>
-            <version>3.2.1</version>
+            <version>3.2.2</version>
         </dependency>
         <!-- TODO: should this be deleted? It is not in newer starters. -->
         <dependency>
