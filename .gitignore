@@ -4,6 +4,7 @@
 .project
 .classpath
 frontend/generated
+frontend/index.html
 
 *.iml
 .DS_Store
