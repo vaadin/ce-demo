@@ -36,20 +36,8 @@ class BotSaver {
 
     private static <T> T getFieldValue(TopicConnection topic,
             String propertyName, Class<T> valueType) {
-        ObjectNode fieldStateJson = topic
-                .getNamedMap(CollaborationBinder.class.getName())
-                .get(propertyName, ObjectNode.class);
-        if (fieldStateJson == null || fieldStateJson.isEmpty()) {
-            return null;
-        }
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            return objectMapper.treeToValue(fieldStateJson.get("value"),
-                    valueType);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return topic.getNamedMap(CollaborationBinder.class.getName())
+                .get(propertyName, valueType);
     }
 
 }

@@ -26,6 +26,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.renderer.LitRenderer;
 import com.vaadin.flow.data.renderer.TemplateRenderer;
 import com.vaadin.flow.function.ValueProvider;
 import com.vaadin.flow.router.PageTitle;
@@ -190,13 +191,13 @@ public class EmployeesView extends Div {
             .withProperty("phoneNumber", getEmptyIfNull(Person::getPhoneNumber));
     }
 
-    private TemplateRenderer<Person> createEditButtonRenderer() {
+    private LitRenderer<Person> createEditButtonRenderer() {
         String template =
-            "<vaadin-button theme=\"icon tertiary\" on-click=\"handleClick\" >"
+            "<vaadin-button theme=\"icon tertiary\" @click=${handleClick} >"
                 + "<vaadin-icon icon=\"vaadin:edit\" slot=\"prefix\"></vaadin-icon>"
                 + "</vaadin-button>";
-        return TemplateRenderer.<Person>of(template)
-            .withEventHandler("handleClick", this::editPerson);
+        return LitRenderer.<Person>of(template)
+            .withFunction("handleClick", this::editPerson);
     }
 
     public static String getTopicId(Person person) {

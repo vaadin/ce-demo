@@ -77,13 +77,8 @@ class BotFieldEditor {
 
     private static int getEditorCount(TopicConnection topic,
             String propertyName) {
-        ObjectNode fieldStateJson = topic
-                .getNamedMap(CollaborationBinder.class.getName())
-                .get(propertyName, ObjectNode.class);
-        if (fieldStateJson == null || fieldStateJson.isEmpty()) {
-            return 0;
-        }
-        return fieldStateJson.get("editors").size();
+        return (int) topic.getNamedList(CollaborationBinder.class.getName()).getItems(ObjectNode.class)
+            .stream().filter(node -> propertyName.equals(node.get("propertyName").asText())).count();
     }
 
 }

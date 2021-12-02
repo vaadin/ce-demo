@@ -1,7 +1,5 @@
 package com.jensjansson.ce.bot;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,19 +14,18 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import com.vaadin.collaborationengine.CollaborationEngine;
-import com.vaadin.collaborationengine.CollaborationMap;
-import com.vaadin.collaborationengine.ConnectionContext;
-import com.vaadin.collaborationengine.NewUserHandler;
-import com.vaadin.collaborationengine.PresenceManager;
-import com.vaadin.collaborationengine.TopicConnection;
-import com.vaadin.collaborationengine.UserInfo;
-import com.vaadin.flow.shared.Registration;
-
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.vaadin.collaborationengine.CollaborationEngine;
+import com.vaadin.collaborationengine.CollaborationMap;
+import com.vaadin.collaborationengine.PresenceHandler;
+import com.vaadin.collaborationengine.PresenceManager;
+import com.vaadin.collaborationengine.TopicConnection;
+import com.vaadin.collaborationengine.UserInfo;
+import com.vaadin.flow.shared.Registration;
 
 /**
  * Thread that controls the bots, both for presence and for editing forms.
@@ -44,14 +41,12 @@ public class BotManager implements Runnable {
     private static final int maxAvatarNumber = 8;
     private static BotManager instance;
 
-    private final EagerConnectionContext connectionContext = new EagerConnectionContext();
     private PersonService personService;
     private CollaborationEngine ce;
     private List<Integer> ids = Collections.emptyList();
     private List<UserInfo> bots;
     private List<ExtraBot> extraBots;
 
-    private BiFunction<UserInfo, String, PresenceManager> presenceManagerCreator;
     private Map<Integer,UserHandler> handlerMap;
     private ConcurrentHashMap<Integer, Bot> botMap = new ConcurrentHashMap<>();
     private CollaborationMap refreshGridMap;
@@ -62,9 +57,8 @@ public class BotManager implements Runnable {
         this.bots = createBotUsers(botCount);
         this.extraBots = createBotUsers(5).stream().map(ExtraBot::new).collect(
             Collectors.toList());
-        this.presenceManagerCreator = createPresenceManagerCreator();
 
-        ce.openTopicConnection(connectionContext,
+        ce.openTopicConnection(ce.getSystemContext(),
             "refreshGrid", createBotUsers(1).get(0), topicConnection -> {
                 refreshGridMap = topicConnection.getNamedMap("refreshGrid");
                 return () -> refreshGridMap = null;
@@ -163,29 +157,9 @@ public class BotManager implements Runnable {
             bot.presenceManager = null;
             previousPresenceManager.close();
         }
-        bot.presenceManager = presenceManagerCreator.apply(bot.userInfo, topic);
-    }
-    private BiFunction<UserInfo, String, PresenceManager> createPresenceManagerCreator() {
-
-        Constructor<PresenceManager> constructor;
-        try {
-            constructor = PresenceManager.class
-                .getDeclaredConstructor(ConnectionContext.class, UserInfo.class,
-                    String.class, CollaborationEngine.class);
-            constructor.setAccessible(true);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        return (bot, topic) -> {
-            try {
-                PresenceManager manager = constructor
-                    .newInstance(connectionContext, bot, topic, ce);
-                manager.markAsPresent(true);
-                return manager;
-            } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException(e);
-            }
-        };
+        bot.presenceManager = new PresenceManager(
+            ce.getSystemContext(), bot.userInfo, topic, ce);
+        bot.presenceManager.markAsPresent(true);
     }
 
     private void fillPresenceObservers() {
@@ -193,12 +167,12 @@ public class BotManager implements Runnable {
         for (Integer id : ids) {
             UserInfo userInfo = bots.get(id % bots.size());
             String topic = createTopic(id);
-            PresenceManager presenceManager = presenceManagerCreator
-                .apply(userInfo, topic);
+            PresenceManager presenceManager = new PresenceManager(
+                ce.getSystemContext(), userInfo, topic, ce);
             presenceManager.markAsPresent(random.nextBoolean());
             UserHandler userHandler = new UserHandler(id, userInfo, topic,
                 presenceManager);
-            presenceManager.setNewUserHandler(userHandler);
+            presenceManager.setPresenceHandler(userHandler);
             handlerMap.put(id, userHandler);
         }
 
@@ -209,7 +183,7 @@ public class BotManager implements Runnable {
         return String.format("person/%d", id);
     }
 
-    class UserHandler implements NewUserHandler {
+    class UserHandler implements PresenceHandler {
 
         private Integer id;
         private UserInfo userInfo;
@@ -228,7 +202,8 @@ public class BotManager implements Runnable {
         }
 
         @Override
-        public Registration handleNewUser(UserInfo user) {
+        public Registration handlePresence(PresenceContext context) {
+            UserInfo user = context.getUser();
             if (isRealUser(user)) {
                 users.add(user);
                 update();
@@ -268,6 +243,7 @@ public class BotManager implements Runnable {
                 }
             }
         }
+
     }
 
     class Bot implements Runnable {
@@ -289,7 +265,7 @@ public class BotManager implements Runnable {
             this.person = person;
             log("Created bot");
             this.topicRegistration = ce
-                .openTopicConnection(new EagerConnectionContext(), topicId,
+                .openTopicConnection(ce.getSystemContext(), topicId,
                     user, topic -> {
                         this.topic = topic;
                         log("Topic connected");
