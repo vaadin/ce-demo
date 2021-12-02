@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -38,17 +37,31 @@ public class BotManager implements Runnable {
         .getLogger(BotManager.class);
 
     private static final int botCount = 20;
+    /**
+     * The images in /images/avatar go
+     * from 1.png to 8.png
+     */
     private static final int maxAvatarNumber = 8;
+    /**
+     * There should be only one BotManager thread, which is initialized in {@link #createInstance(PersonService, CollaborationEngine)}
+     */
     private static BotManager instance;
 
     private PersonService personService;
     private CollaborationEngine ce;
+    /**
+     * Ids from the {@link Person} entities.
+     */
     private List<Integer> ids = Collections.emptyList();
     private List<UserInfo> bots;
     private List<ExtraBot> extraBots;
 
     private Map<Integer,UserHandler> handlerMap;
     private ConcurrentHashMap<Integer, Bot> botMap = new ConcurrentHashMap<>();
+    /**
+     * RefreshGridMap is used to communicate with EmployeesView that a given
+     * entity has been changed in the database and should be reloaded.
+     */
     private CollaborationMap refreshGridMap;
 
     BotManager(PersonService personService, CollaborationEngine ce) {
@@ -58,6 +71,7 @@ public class BotManager implements Runnable {
         this.extraBots = createBotUsers(5).stream().map(ExtraBot::new).collect(
             Collectors.toList());
 
+        //  Connect to the refreshGrid topic.
         ce.openTopicConnection(ce.getSystemContext(),
             "refreshGrid", createBotUsers(1).get(0), topicConnection -> {
                 refreshGridMap = topicConnection.getNamedMap("refreshGrid");
@@ -65,6 +79,11 @@ public class BotManager implements Runnable {
             });
     }
 
+    /**
+     * Called by the {@link com.jensjansson.ce.Application} class on startup to create a BotManager instance.
+     * @param personService {@link PersonService}
+     * @param ce {@link CollaborationEngine}
+     */
     public static void createInstance(PersonService personService,
         CollaborationEngine ce) {
         if (instance != null) {
@@ -78,12 +97,20 @@ public class BotManager implements Runnable {
         thread.start();
     }
 
+    /**
+     * Generates a random number that will be used as the number of edits a
+     * specific bot will do before saving the entity.
+     *
+     * @return A random number between 2 and 5.
+     */
     private int generateNumberOfEditsBeforeSave() {
         return 2 + (random.nextInt(4));
     }
 
     @Override
     public synchronized void run() {
+        // We need to wait until the DataGenerator has run and initialized the
+        // database.
         boolean initialized = false;
         while (!initialized) {
             doWait(1000);
@@ -91,16 +118,23 @@ public class BotManager implements Runnable {
         }
         IntStream.range(0,extraBots.size()).forEach(this::createPresence);
         for (int i = 0; true; i = (i + 1) % extraBots.size()) {
+            // 20% chance of changing the presence of bot i.
             if(random.nextDouble() < 0.2) {
+                // Marks bot extraBots[i] as present in a random topic.
                 createPresence(i);
             }
+            // Gets the UserHandler for a random topic. The topic is always valid.
             UserHandler handler = handlerMap.get(ids.get(random.nextInt(ids.size())));
-            //Ignore if has users.
+            // Ignore if has users (eg: someone is editing the topic).
+            // We want topics with users to be active.
             if(handler.hasUsers) continue;
+            // Randomly change the presence in the topic.
             handler.presenceManager.markAsPresent(random.nextBoolean());
 
+            // Sleep for 500 milliseconds
             doWait(500);
 
+            // Run 1 iteration for each edit bot.
             botMap.values().stream().filter(b -> !b.shouldStop)
                 .collect(Collectors.toList()).forEach(bot -> {
                 try {
@@ -112,6 +146,7 @@ public class BotManager implements Runnable {
         }
     }
 
+    // Wait, ignore InterrupedException
     private void doWait(int milliseconds) {
         try {
             wait(milliseconds);
@@ -120,6 +155,13 @@ public class BotManager implements Runnable {
         }
     }
 
+    /**
+     * Creates the specified number of {@link UserInfo} instances, which will
+     * be used for bots.
+     *
+     * @param count number of bot users to create.
+     * @return List of {@link UserInfo} instances created.
+     */
     private static List<UserInfo> createBotUsers(int count) {
         return IntStream.range(0, count).mapToObj(i -> {
             UserInfo bot = BotUserGenerator.generateBotUser(BOT_PREFIX);
@@ -138,30 +180,42 @@ public class BotManager implements Runnable {
         this.ids = personService.findByQuery(null).stream().map(Person::getId)
             .collect(Collectors.toList());
         if (this.ids.isEmpty()) {
+            // Still not available.
             return false;
         }
         fillPresenceObservers();
         return true;
     }
 
+    /**
+     * Makes extraBot[i] present in a random topic.
+     * @param i Bot to change (index in extraBots list)
+     */
     private void createPresence(int i) {
         String topic = createTopic(random.nextInt(20) + 1);
         ExtraBot bot = extraBots.get(i);
         PresenceManager previousPresenceManager = bot.presenceManager;
         if (previousPresenceManager != null && topic
             .equals(previousPresenceManager.getTopicId())) {
-            //Nothing to do
+            //Nothing to do. The Bot was already present in that topic.
             return;
         }
+        // Close the PresenceManager for the previous topic.
         if (previousPresenceManager != null) {
             bot.presenceManager = null;
             previousPresenceManager.close();
         }
+        // Create a new PresenceManager in the new topic.
         bot.presenceManager = new PresenceManager(
             ce.getSystemContext(), bot.userInfo, topic, ce);
         bot.presenceManager.markAsPresent(true);
     }
 
+    /**
+     * Fills handlerMap. For each of the available {@link Person} instances,
+     * a bot will be assigned and a new PresenceManager will be created.
+     * The PresenceManager has a 50% chance of being marked as present initially.
+     */
     private void fillPresenceObservers() {
         Map<Integer, UserHandler> handlerMap = new HashMap<>();
         for (Integer id : ids) {
@@ -179,18 +233,43 @@ public class BotManager implements Runnable {
         this.handlerMap = Collections.unmodifiableMap(handlerMap);
     }
 
+    /**
+     * Creates a String representing the topic for a given {@link Person} id.
+     * @param id id of the {@link Person} entity
+     * @return topic string
+     */
     private String createTopic(Integer id) {
         return String.format("person/%d", id);
     }
 
+    /**
+     * PresenceHandler which observes a topic. When a real user connects, the
+     * assigned bot will be marked as present in the topic and a new editor bot
+     * will be created.
+     *
+     * A real user connects to the topic when the EditorView is open for that
+     * {@link Person} entity.
+     */
     class UserHandler implements PresenceHandler {
 
+        /**
+         * Id of the {@link Person} entity.
+         */
         private Integer id;
+        /**
+         * Bot {@link UserInfo}
+         */
         private UserInfo userInfo;
         private String topic;
         private PresenceManager presenceManager;
 
+        /**
+         * List of real users (not bots).
+         */
         private Set<UserInfo> users = new HashSet<>();
+        /**
+         * If there are real users connected to the topic.
+         */
         private volatile boolean hasUsers;
 
         public UserHandler(Integer id, UserInfo userInfo, String topic,
