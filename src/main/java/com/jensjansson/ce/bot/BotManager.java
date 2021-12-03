@@ -27,7 +27,28 @@ import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.shared.Registration;
 
 /**
- * Thread that controls the bots, both for presence and for editing forms.
+ * Controls the bots, both for presence and for editing forms.
+ * Runs in one specific thread, created in {@link com.jensjansson.ce.Application}
+ * when the demo is started.
+ *
+ * There are three types of bots.
+ *
+ * <p>The main bots connect to the topics for the {@link Person} instances so
+ * there is always one bot connected to each topic. The connections use a {@link PresenceManager}
+ * with a {@link UserHandler}, which is a {@link PresenceHandler}. While there are
+ * no real users connected to the topic, the bots randomly change the value of
+ * {@link PresenceManager#markAsPresent(boolean)}. Once at least one user opens
+ * the edit window for a {@link Person} topic, the bot is marked as present in
+ * that topic and an {@link EditBot} is created.</p>
+ *
+ * <p>The {@link EditBot} makes random changes to the topic, saving the entity
+ * in the database every few changes At most 1 instance of the {@link EditBot}
+ * is run for each topic.</p>
+ *
+ * <p>The last kind of Bot is the {@link ExtraBot}. There are 5 of those. They
+ * are always marked as present in a topic, but keep changing topics randomly.</p>
+ *
+ * Check  {@link #run()} for more information.
  */
 public class BotManager implements Runnable {
     public static final String BOT_PREFIX =
@@ -120,6 +141,18 @@ public class BotManager implements Runnable {
         thread.start();
     }
 
+    /**
+     * Waits until initialized. Then loops forever, waking up every 500
+     * milliseconds. Each time it wakes up the following are performed:
+     * <ol>
+     *     <li>The {@link EditBot#run()} method is called for each active
+     *     EditBot</li>
+     *     <li>One Extra Bot has 20% chance of changing topic</li>
+     *     <li>One main bot will be selected. If it has no users connected to
+     *     that topic, it will have 50% chance of changing the value of
+     *     {@link PresenceManager#markAsPresent(boolean)}</li>
+     * </ol>
+     */
     @Override
     public synchronized void run() {
         // We need to wait until the DataGenerator has run and initialized the
@@ -133,9 +166,9 @@ public class BotManager implements Runnable {
         // Make the extra bots present in random topics.
         IntStream.range(0,extraBots.size()).forEach(this::createPresence);
 
-        // Loop forever, i goes from 0 to extraBots.size() - 1
+        // Loop forever, i goes from 0 to extraBots.size() - 1, then back to 0
         for (int i = 0; true; i = (i + 1) % extraBots.size()) {
-            // 20% chance of changing the presence of bot i.
+            // 20% chance of changing the presence of extra bot i.
             if(random.nextDouble() < 0.2) {
                 // Marks bot extraBots[i] as present in a random topic.
                 createPresence(i);
