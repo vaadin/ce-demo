@@ -216,6 +216,11 @@ public class EmployeesView extends Div {
     }
 }
 
+/**
+ * Component that shows avatars of the users marked as present in the topic
+ * without marking the current user as present.
+ * Used in the grid to display bots and users editing a given entity.
+ */
 class PresenceComponent extends AvatarGroup {
 
     private static final Logger logger = LoggerFactory
