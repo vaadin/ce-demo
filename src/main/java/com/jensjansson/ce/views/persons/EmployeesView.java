@@ -27,7 +27,6 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.LitRenderer;
-import com.vaadin.flow.data.renderer.TemplateRenderer;
 import com.vaadin.flow.function.ValueProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -138,14 +137,14 @@ public class EmployeesView extends Div {
 
     }
 
-    private TemplateRenderer<Person> createAvatarRenderer() {
+    private LitRenderer<Person> createAvatarRenderer() {
         final String value = "<vaadin-avatar"
             + " class=\"mt-xs\""
             + " theme=\"large\""
-            + " img=[[item.img]]"
-            + " name=[[item.name]]"
+            + " img=${item.img}"
+            + " name=${item.name}"
             + "></vaadin-avatar>";
-        return TemplateRenderer.<Person>of(value)
+        return LitRenderer.<Person>of(value)
             .withProperty("img", Person::getAvatar)
             .withProperty("name", Person::getFullName);
     }
@@ -157,21 +156,21 @@ public class EmployeesView extends Div {
         };
     }
 
-    private TemplateRenderer<Person> createOwnerInfoRenderer() {
+    private LitRenderer<Person> createOwnerInfoRenderer() {
         String template = "<div class=\"leading-m py-s flex flex-col\">"
-            + "<span class=\"font-semibold text-l\">[[item.name]]</span>"
-            + "<span class=\"text-s text-secondary\">[[item.title]]</span></div>";
-        return TemplateRenderer.<Person>of(template)
+            + "<span class=\"font-semibold text-l\">${item.name}</span>"
+            + "<span class=\"text-s text-secondary\">${item.title}</span></div>";
+        return LitRenderer.<Person>of(template)
             .withProperty("name", Person::getFullName)
             .withProperty("title", getEmptyIfNull(Person::getTitle));
     }
 
-    private TemplateRenderer<Person> createTeamInfoRenderer() {
+    private LitRenderer<Person> createTeamInfoRenderer() {
         String template = "<div class=\"leading-m py-s flex flex-col text-secondary\">"
-            + "<span>[[item.department]]</span>"
-            + "<span class=\"text-s\">[[item.team]]</span>"
+            + "<span>${item.department}</span>"
+            + "<span class=\"text-s\">${item.team}</span>"
             + "</div>";
-        return TemplateRenderer.<Person>of(template)
+        return LitRenderer.<Person>of(template)
             .withProperty("department", getEmptyIfNull(Person::getDepartment))
             .withProperty("team", getEmptyIfNull(Person::getTeam));
     }
@@ -181,12 +180,12 @@ public class EmployeesView extends Div {
         return new PresenceComponent(localUser, topicId);
     }
 
-    private TemplateRenderer<Person> createContactInfoRenderer() {
+    private LitRenderer<Person> createContactInfoRenderer() {
         String template = "<div class=\"leading-m py-s flex flex-col text-secondary\">"
-            + "<span>[[item.email]]</span>"
-            + "<span class=\"text-s\">[[item.phoneNumber]]</span>"
+            + "<span>${item.email}</span>"
+            + "<span class=\"text-s\">${item.phoneNumber}</span>"
             + "</div>";
-        return TemplateRenderer.<Person>of(template)
+        return LitRenderer.<Person>of(template)
             .withProperty("email", getEmptyIfNull(Person::getEmail))
             .withProperty("phoneNumber", getEmptyIfNull(Person::getPhoneNumber));
     }
@@ -232,23 +231,21 @@ class PresenceComponent extends AvatarGroup {
         PresenceManager presenceManager = new PresenceManager(this,
             localUser, topicId);
         presenceManager.markAsPresent(false);
+        
+        
 
-        presenceManager.setNewUserHandler(e -> {
-            String description = String
-                .format("%s is editing this row", e.getName());
-            AvatarGroupItem item = new AvatarGroupItem(description,
-                e.getImage());
-            item.setColorIndex(
-                CollaborationEngine.getInstance().getUserColorIndex(e));
-            if (Objects.equals(localUser.getId(),e.getId())) {
-                // Set the local user as the first item.
-                setItems(Stream.concat(Stream.of(item), getItems().stream()).collect(
-                    Collectors.toList()));
-            } else {
-                add(item);
-            }
-            return () -> remove(item);
-        });
+		presenceManager.setPresenceHandler(e -> {
+			String description = String.format("%s is editing this row", e.getUser().getName());
+			AvatarGroupItem item = new AvatarGroupItem(description, e.getUser().getImage());
+			item.setColorIndex(e.getUser().getColorIndex());
+			if (Objects.equals(localUser.getId(), e.getUser().getId())) {
+				// Set the local user as the first item.
+				setItems(Stream.concat(Stream.of(item), getItems().stream()).collect(Collectors.toList()));
+			} else {
+				add(item);
+			}
+			return () -> remove(item);
+		});
         addAttachListener( e -> logger.debug("Attached to " + topicId));
         addDetachListener( e -> logger.debug("Detached from" + topicId));
     }
