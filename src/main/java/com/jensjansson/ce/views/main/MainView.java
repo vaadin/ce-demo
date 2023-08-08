@@ -88,7 +88,7 @@ public class MainView extends AppLayout {
 
     private RouterLink createLink(VaadinIcon vaadinIcon, String text,
             Class<? extends Component> view) {
-        RouterLink link = new RouterLink(null, view);
+        RouterLink link = new RouterLink("", view);
 
         Icon icon = vaadinIcon.create();
         icon.addClassNames("box-border", "icon-s", "me-s");

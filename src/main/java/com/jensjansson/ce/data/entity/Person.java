@@ -1,7 +1,7 @@
 package com.jensjansson.ce.data.entity;
 
-import javax.persistence.Entity;
-import javax.persistence.Transient;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jensjansson.ce.data.AbstractEntity;
