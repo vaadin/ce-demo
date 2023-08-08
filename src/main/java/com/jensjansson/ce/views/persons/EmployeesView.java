@@ -231,21 +231,21 @@ class PresenceComponent extends AvatarGroup {
         PresenceManager presenceManager = new PresenceManager(this,
             localUser, topicId);
         presenceManager.markAsPresent(false);
-        
-        
 
-		presenceManager.setPresenceHandler(e -> {
-			String description = String.format("%s is editing this row", e.getUser().getName());
-			AvatarGroupItem item = new AvatarGroupItem(description, e.getUser().getImage());
-			item.setColorIndex(e.getUser().getColorIndex());
-			if (Objects.equals(localUser.getId(), e.getUser().getId())) {
-				// Set the local user as the first item.
-				setItems(Stream.concat(Stream.of(item), getItems().stream()).collect(Collectors.toList()));
-			} else {
-				add(item);
-			}
-			return () -> remove(item);
-		});
+
+
+        presenceManager.setPresenceHandler(e -> {
+            String description = String.format("%s is editing this row", e.getUser().getName());
+            AvatarGroupItem item = new AvatarGroupItem(description, e.getUser().getImage());
+            CollaborationEngine.getInstance().getUserColorIndex(e.getUser());
+            if (Objects.equals(localUser.getId(), e.getUser().getId())) {
+                // Set the local user as the first item.
+                setItems(Stream.concat(Stream.of(item), getItems().stream()).collect(Collectors.toList()));
+            } else {
+                add(item);
+            }
+            return () -> remove(item);
+        });
         addAttachListener( e -> logger.debug("Attached to " + topicId));
         addDetachListener( e -> logger.debug("Detached from" + topicId));
     }
