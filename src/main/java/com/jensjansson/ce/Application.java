@@ -8,11 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.vaadin.collaborationengine.CollaborationEngine;
 import com.vaadin.collaborationengine.CollaborationEngineConfiguration;
-import com.vaadin.collaborationengine.LicenseEventHandler;
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.server.PWA;
@@ -42,23 +40,7 @@ public class Application extends SpringBootServletInitializer
 
     @Override
     public void serviceInit(ServiceInitEvent serviceInitEvent) {
-        LicenseEventHandler licenseEventHandler = licenseEvent -> {
-            switch (licenseEvent.getType()) {
-            case GRACE_PERIOD_STARTED:
-            case LICENSE_EXPIRES_SOON:
-
-                LOGGER.warn(licenseEvent.getMessage());
-                break;
-            case GRACE_PERIOD_ENDED:
-            case LICENSE_EXPIRED:
-                LOGGER.error(licenseEvent.getMessage());
-                break;
-            default:
-                LOGGER.error("Unknown error: " + licenseEvent.getMessage());
-            }
-        };
-        CollaborationEngineConfiguration configuration = new CollaborationEngineConfiguration(
-                licenseEventHandler);
+        CollaborationEngineConfiguration configuration = new CollaborationEngineConfiguration();
         CollaborationEngine ce = CollaborationEngine.configure(serviceInitEvent.getSource(),
                 configuration);
 
