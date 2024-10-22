@@ -15,6 +15,7 @@ import java.util.stream.IntStream;
 
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
+import com.vaadin.flow.function.SerializableSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +74,7 @@ public class BotManager implements Runnable {
     private static BotManager instance;
 
     private PersonService personService;
-    private CollaborationEngine ce;
+    private final SerializableSupplier<CollaborationEngine> ceSupplier;
     /**
      * Ids from the {@link Person} entities.
      */
@@ -108,15 +109,15 @@ public class BotManager implements Runnable {
      */
     private CollaborationMap refreshGridMap;
 
-    BotManager(PersonService personService, CollaborationEngine ce) {
+    BotManager(PersonService personService, SerializableSupplier<CollaborationEngine> ceSupplier) {
         this.personService = personService;
-        this.ce = ce;
+        this.ceSupplier  = ceSupplier ;
         this.bots = createBotUsers(botCount);
         this.extraBots = createBotUsers(5).stream().map(ExtraBot::new).collect(
             Collectors.toList());
 
         //  Connect to the refreshGrid topic.
-        ce.openTopicConnection(ce.getSystemContext(),
+        ceSupplier.get().openTopicConnection(ceSupplier.get().getSystemContext(),
             "refreshGrid", createBotUsers(1).get(0), topicConnection -> {
                 refreshGridMap = topicConnection.getNamedMap("refreshGrid");
                 return () -> refreshGridMap = null;
@@ -126,15 +127,15 @@ public class BotManager implements Runnable {
     /**
      * Called by the {@link com.jensjansson.ce.Application} class on startup to create a BotManager instance.
      * @param personService {@link PersonService}
-     * @param ce {@link CollaborationEngine}
+     * @param ceSupplier the Collaboration Engine instance, not {@code null}
      */
     public static void createInstance(PersonService personService,
-        CollaborationEngine ce) {
+                                      SerializableSupplier<CollaborationEngine> ceSupplier) {
         if (instance != null) {
             throw new IllegalStateException(
                 "Only 1 instance should be created");
         }
-        instance = new BotManager(personService, ce);
+        instance = new BotManager(personService, ceSupplier);
         Thread thread = new Thread(instance);
         thread.setDaemon(true);
         thread.setName("Bot-Thread");
@@ -257,7 +258,7 @@ public class BotManager implements Runnable {
         }
         // Create a new PresenceManager in the new topic.
         bot.presenceManager = new PresenceManager(
-            ce.getSystemContext(), bot.userInfo, topic, ce);
+                ceSupplier.get().getSystemContext(), bot.userInfo, topic, ceSupplier);
         bot.presenceManager.markAsPresent(true);
     }
 
@@ -272,7 +273,7 @@ public class BotManager implements Runnable {
             UserInfo userInfo = bots.get(id % bots.size());
             String topic = createTopic(id);
             PresenceManager presenceManager = new PresenceManager(
-                ce.getSystemContext(), userInfo, topic, ce);
+                    ceSupplier.get().getSystemContext(), userInfo, topic, ceSupplier);
             presenceManager.markAsPresent(random.nextBoolean());
             UserHandler userHandler = new UserHandler(id, userInfo, topic,
                 presenceManager);
@@ -455,8 +456,8 @@ public class BotManager implements Runnable {
             this.user = user;
             this.person = person;
             log("Created bot");
-            this.topicRegistration = ce
-                .openTopicConnection(ce.getSystemContext(), topicId,
+            this.topicRegistration = ceSupplier.get()
+                .openTopicConnection(ceSupplier.get().getSystemContext(), topicId,
                     user, topic -> {
                         this.topic = topic;
                         log("Topic connected");
@@ -503,7 +504,7 @@ public class BotManager implements Runnable {
                 // Enough edits have been performed, save the entity to the
                 // database and send a notification to the topic.
                 log("Called save");
-                BotSaver.save(ce, topic, person, personService, user);
+                BotSaver.save(ceSupplier.get(), topic, person, personService, user);
                 refreshGridMap.put(String.valueOf(person.getId()), person);
 
                 // reset values for the next edit.

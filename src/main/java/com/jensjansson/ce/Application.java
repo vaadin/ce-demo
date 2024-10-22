@@ -2,6 +2,7 @@ package com.jensjansson.ce;
 
 import com.jensjansson.ce.bot.BotManager;
 import com.jensjansson.ce.data.service.PersonService;
+import com.vaadin.flow.function.SerializableSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,29 +40,16 @@ public class Application extends SpringBootServletInitializer
 
     @Autowired
     PersonService personService;
+    SerializableSupplier<CollaborationEngine> ceSupplier;
 
     @Override
     public void serviceInit(ServiceInitEvent serviceInitEvent) {
-        LicenseEventHandler licenseEventHandler = licenseEvent -> {
-            switch (licenseEvent.getType()) {
-            case GRACE_PERIOD_STARTED:
-            case LICENSE_EXPIRES_SOON:
 
-                LOGGER.warn(licenseEvent.getMessage());
-                break;
-            case GRACE_PERIOD_ENDED:
-            case LICENSE_EXPIRED:
-                LOGGER.error(licenseEvent.getMessage());
-                break;
-            default:
-                LOGGER.error("Unknown error: " + licenseEvent.getMessage());
-            }
-        };
-        CollaborationEngineConfiguration configuration = new CollaborationEngineConfiguration(
-                licenseEventHandler);
+        CollaborationEngineConfiguration configuration = new CollaborationEngineConfiguration();
         CollaborationEngine ce = CollaborationEngine.configure(serviceInitEvent.getSource(),
                 configuration);
+        ceSupplier = () -> ce;
 
-        BotManager.createInstance(personService, ce);
+        BotManager.createInstance(personService, ceSupplier);
     }
 }

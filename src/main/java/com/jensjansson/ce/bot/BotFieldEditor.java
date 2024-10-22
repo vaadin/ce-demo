@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 import com.vaadin.collaborationengine.CollaborationBinder;
 import com.vaadin.collaborationengine.CollaborationBinderUtil;
@@ -15,7 +16,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.generator.DataGenerator;
 import com.jensjansson.ce.views.persons.EditorView;
-import org.apache.logging.log4j.util.Supplier;
 
 class BotFieldEditor {
 
