@@ -181,7 +181,6 @@ public class EditorView extends Div {
         happiness.setLabel("How excited are they?");
         happiness.setItems(HAPPINESS_VALUES);
         happiness.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
-        happiness.setValue("Raptorous");
 
         // Configure Form
         binder = new CollaborationBinder<>(Person.class, localUser);
@@ -192,6 +191,7 @@ public class EditorView extends Div {
         binder.forField(title).bind("title");
         binder.forField(department).bind("department");
         binder.forField(team).bind("team");
+        binder.forField(happiness).bind("happiness");
 
         // Bind fields. This where you'd define e.g. validation rules
         binder.bindInstanceFields(this);
