@@ -1,5 +1,7 @@
 package com.jensjansson.ce.views.main;
 
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -27,7 +29,8 @@ import com.vaadin.flow.spring.annotation.UIScope;
 
 @org.springframework.stereotype.Component
 @UIScope
-public class MainView extends AppLayout {
+@AnonymousAllowed
+public class MainView extends AppLayout implements com.vaadin.flow.router.AfterNavigationObserver {
 
     private Nav menu;
     private H1 viewTitle;
@@ -120,9 +123,11 @@ public class MainView extends AppLayout {
     }
 
     @Override
-    protected void afterNavigation() {
-        super.afterNavigation();
-        String title = getContent().getClass().getAnnotation(PageTitle.class)
+    
+
+    public void afterNavigation(com.vaadin.flow.router.AfterNavigationEvent event) {
+
+    String title = getContent().getClass().getAnnotation(PageTitle.class)
                 .value();
         viewTitle.setText(title);
     }

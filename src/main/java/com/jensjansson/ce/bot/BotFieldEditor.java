@@ -12,7 +12,7 @@ import com.vaadin.collaborationengine.CollaborationBinderUtil;
 import com.vaadin.collaborationengine.TopicConnection;
 import com.vaadin.collaborationengine.UserInfo;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.generator.DataGenerator;
 import com.jensjansson.ce.views.persons.EditorView;
