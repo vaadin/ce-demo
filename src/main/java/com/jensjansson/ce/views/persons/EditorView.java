@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
 
@@ -291,7 +291,7 @@ public class EditorView extends Div {
                                             savingUser = "you";
                                         }
                                         showSaveNotification(savingUser);
-                                    } catch (JsonProcessingException jsonProcessingException) {
+                                    } catch (Exception jsonProcessingException) {
                                         jsonProcessingException
                                                 .printStackTrace();
                                     }

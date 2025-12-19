@@ -3,8 +3,8 @@ package com.jensjansson.ce.bot;
 import java.io.IOException;
 import java.util.UUID;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 import com.jensjansson.ce.data.entity.Person;
 import com.jensjansson.ce.data.service.PersonService;
 import com.jensjansson.ce.views.persons.EditorView;

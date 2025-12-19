@@ -13,7 +13,7 @@ import com.vaadin.collaborationengine.UserInfo;
 import com.vaadin.flow.function.SerializableFunction;
 import com.vaadin.flow.server.Command;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.type.TypeReference;
 
 class BotAvatarUtil {
 
