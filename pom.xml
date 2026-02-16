@@ -102,12 +102,6 @@
             <groupId>org.vaadin.artur.exampledata</groupId>
             <artifactId>exampledata</artifactId>
             <version>1.0.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-io</groupId>
-                    <artifactId>commons-io</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>
